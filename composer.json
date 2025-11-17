@@ -1,0 +1,67 @@
+{
+     "name": "{{namespace|slug,reverse}}",
+    "description": "{{description}}",
+    "type": "{{type}}",
+    "license": "{{license}}",
+    "require": {
+        "php": "^8.4"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.7",
+        "laravel/pint": "^v1.25.1",
+        "orchestra/testbench": "^10.6",
+        "pestphp/pest": "v4.1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{namespace|escape}}\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "{{namespace|escape}}\\TestingServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "@php vendor/bin/pest",
+        "test:ci": "@php vendor/bin/pest --ci",
+        "lint": "@php vendor/bin/phpstan analyse --memory-limit=1G",
+        "style": "@php vendor/bin/pint",
+        "style:test": "@style --test",
+        "lint:with-style": [
+            "@lint",
+            "@style:test"
+        ],
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "{{minimum-stability}}",
+    "prefer-stable": true
+}
