@@ -16,13 +16,13 @@ beforeEach(function () {
 });
 
 it('has settings table', function () {
-    $table = (new Setting)->getTable();
+    $table = (new Setting())->getTable();
 
     expect(Schema::hasTable($table))->toBeTrue();
 });
 
 it('has seeded settings', function () {
-    $table = (new Setting)->getTable();
+    $table = (new Setting())->getTable();
 
     Setting::insert([
         ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],

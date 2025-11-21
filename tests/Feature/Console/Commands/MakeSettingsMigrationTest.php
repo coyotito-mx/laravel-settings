@@ -70,4 +70,3 @@ it('only generates the migration file', function () {
 });
 
 it('cannot create group with reserved words')->todo();
-

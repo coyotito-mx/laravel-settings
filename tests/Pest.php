@@ -48,8 +48,7 @@ uses(Tests\TestCase::class)
  */
 function rmdir_recursive(string $directory, bool $delete_root = true): bool
 {
-    $walk = static function (string $root) use (&$walk, $delete_root): bool
-    {
+    $walk = static function (string $root) use (&$walk, $delete_root): bool {
         foreach (scandir($root) as $file) {
             if ($file === '.' || $file === '..') {
                 continue;

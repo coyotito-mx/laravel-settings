@@ -1,7 +1,8 @@
 <?php
 
-use function Coyotito\LaravelSettings\Helpers\package_path;
 use Orchestra\Testbench;
+
+use function Coyotito\LaravelSettings\Helpers\package_path;
 
 dataset('paths', [
     'config',

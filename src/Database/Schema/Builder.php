@@ -42,7 +42,7 @@ final class Builder
         $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
         $blueprint = new Blueprint($repo);
 
-        $callback( $blueprint);
+        $callback($blueprint);
     }
 
     /**

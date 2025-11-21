@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings\Repositories;
 
 use Arr;
-use Coyotito\LaravelSettings\Models\Setting;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use RuntimeException;
 
 class EloquentRepository implements Contracts\Repository
@@ -36,7 +34,7 @@ class EloquentRepository implements Contracts\Repository
         $settings = $this->withGroup()->whereIn('name', array_is_list($setting) ? $setting : array_keys($setting))->get();
 
         $collection = collect($setting)
-            ->map(function (mixed $value, string $name) use ($settings){
+            ->map(function (mixed $value, string $name) use ($settings) {
                 return $settings->where('name', $name)->first()?->payload ?? $value;
             });
 
