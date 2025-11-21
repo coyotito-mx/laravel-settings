@@ -44,12 +44,11 @@ uses(Tests\TestCase::class)
  *
  * @param string $directory The root directory to delete
  * @param bool $delete_root Should delete the root directory
- * @param bool $dot_files Should delete dot files. Only applies to the root directory, and this overwrite the `$delete_root` value
  * @return bool
  */
-function rmdir_recursive(string $directory, bool $delete_root = true, bool $dot_files = true): bool
+function rmdir_recursive(string $directory, bool $delete_root = true): bool
 {
-    $walk = static function (string $root, bool $isRoot) use (&$walk, $delete_root, $dot_files): bool
+    $walk = static function (string $root) use (&$walk, $delete_root): bool
     {
         foreach (scandir($root) as $file) {
             if ($file === '.' || $file === '..') {
@@ -65,14 +64,10 @@ function rmdir_recursive(string $directory, bool $delete_root = true, bool $dot_
                 continue;
             }
 
-            if ($isRoot && ! $dot_files && str_starts_with(pathinfo($file, PATHINFO_BASENAME), '.')) {
-                continue;
-            }
-
             unlink($filepath);
         }
 
-        if ($delete_root && $dot_files) {
+        if ($delete_root) {
             return rmdir($root);
         }
 
