@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace {{namespace}}\Facades;
+namespace Coyotito\LaravelSettings\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
  * Example Facade
  *
- * @package {{namespace}}\Facades
+ * @mixin \Coyotito\LaravelSettings\Database\Schema\Builder
  */
-class {{package|title}} extends Facade
+class Schema extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'testing';
+        return 'settings.schema';
     }
 }

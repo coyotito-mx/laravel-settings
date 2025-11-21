@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+
+use Illuminate\Database\Migrations\Migration;
+use Coyotito\LaravelSettings\Facades\Schema;
+use Coyotito\LaravelSettings\Database\Schema\Blueprint;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::default(function (Blueprint $group) {
+            // Add your settings here
+        });
+    }
+
+    public function down(): void
+    {
+        // Remove your settings here
+    }
+};

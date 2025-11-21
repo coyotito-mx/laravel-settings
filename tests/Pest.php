@@ -11,7 +11,11 @@
 |
 */
 
-uses(Tests\TestCase::class)->in('Feature');
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(Tests\TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature');
 
 /*
 |--------------------------------------------------------------------------
@@ -24,10 +28,6 @@ uses(Tests\TestCase::class)->in('Feature');
 |
 */
 
-expect()->extend('toBeTwo', function (int $b) {
-    return expect($this->value + $b)->toBe(2);
-});
-
 /*
 |--------------------------------------------------------------------------
 | Functions
@@ -39,7 +39,53 @@ expect()->extend('toBeTwo', function (int $b) {
 |
 */
 
-function example(): int
+/**
+ * Delete folder recursively
+ *
+ * @param string $directory The root directory to delete
+ * @param bool $delete_root Should delete the root directory
+ * @param bool $dot_files Should delete dot files. Only applies to the root directory, and this overwrite the `$delete_root` value
+ * @return bool
+ */
+function rmdir_recursive(string $directory, bool $delete_root = true, bool $dot_files = true): bool
 {
-    return 1 + 1;
+    $walk = static function (string $root, bool $isRoot) use (&$walk, $delete_root, $dot_files): bool
+    {
+        foreach (scandir($root) as $file) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            $filepath = implode(DIRECTORY_SEPARATOR, [$root, $file]);
+
+            if (is_dir($filepath)) {
+                $walk($filepath, false);
+                rmdir($filepath);
+
+                continue;
+            }
+
+            if ($isRoot && ! $dot_files && str_starts_with(pathinfo($file, PATHINFO_BASENAME), '.')) {
+                continue;
+            }
+
+            unlink($filepath);
+        }
+
+        if ($delete_root && $dot_files) {
+            return rmdir($root);
+        }
+
+        return true;
+    };
+
+    if (! file_exists($directory)) {
+        return false;
+    }
+
+    if (! is_dir($directory)) {
+        throw new \RuntimeException('The provided path is not a directory');
+    }
+
+    return $walk($directory, true);
 }
