@@ -13,9 +13,9 @@ namespace Coyotito\LaravelSettings\Repositories\Contracts;
 interface Repository
 {
     /**
-     * Get a setting value
+     * Get one or more settings
      */
-    public function get(string $name, mixed $default = null): mixed;
+    public function get(string|array $setting, mixed $default = null): mixed;
 
     /**
      * Get all the settings
@@ -23,34 +23,29 @@ interface Repository
     public function getAll(): array;
 
     /**
-     * Set a value to a settings
+     * Update one or more settings
      */
-    public function update(string $name, mixed $value): void;
+    public function update(string|array $setting, mixed $value = null): void;
 
     /**
-     * Update many setting values
+     * Insert one or more setting
      */
-    public function updateMany(array $settings): void;
+    public function insert(string|array $setting, mixed $value = null): void;
 
     /**
-     * Insert many setting values
+     * Delete one or more settings
      */
-    public function insertMany(array $settings): void;
+    public function delete(string|array $setting): int;
 
     /**
-     * Delete a setting
+     * Drop all the settings
      */
-    public function delete(string $name): void;
-
-    /**
-     * Delete settings
-     */
-    public function deleteMany(array $names): int;
+    public function drop(): void;
 
     /**
      * Get the setting's group
      */
-    public function getGroup(): string;
+    public function group(): string;
 
     /**
      * Set the settings group
@@ -58,12 +53,7 @@ interface Repository
     public function setGroup(string $group): void;
 
     /**
-     * Delete all the settings
-     */
-    public function deleteAll(): void;
-
-    /**
      * Rename a settings' group name
      */
-    public function renameGroup($newGroup): void;
+    public function renameGroup(string $newGroup): void;
 }

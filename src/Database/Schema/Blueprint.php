@@ -48,7 +48,7 @@ final class Blueprint
      */
     protected function addSettings(array $settings): void
     {
-        $this->repository->insertMany($settings);
+        $this->repository->insert($settings);
     }
 
     /**
@@ -56,7 +56,7 @@ final class Blueprint
      */
     protected function deleteSettings(array $settings): void
     {
-        $this->repository->deleteMany($settings);
+        $this->repository->delete($settings);
     }
 
     /**

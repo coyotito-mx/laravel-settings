@@ -167,7 +167,7 @@ abstract class Settings
         $updatedSettings = $this->getUpdated();
 
         if (filled($updatedSettings)) {
-            $this->repository->updateMany($updatedSettings);
+            $this->repository->update($updatedSettings);
 
             foreach ($updatedSettings as $name => $value) {
                 // save the old setting

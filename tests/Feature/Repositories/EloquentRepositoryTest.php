@@ -24,11 +24,10 @@ it('has settings table', function () {
 it('has seeded settings', function () {
     $table = (new Setting)->getTable();
 
-    tap($this->repo, fn ($repo) => $repo->setGroup('default'))
-        ->insertMany([
-            'name' => 'Coyotito',
-            'debug' => true,
-        ]);
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+    ]);
 
     assertDatabaseCount($table, 2);
 
@@ -45,9 +44,9 @@ it('has seeded settings', function () {
 });
 
 it('can fill properties', function () {
-    $this->repo->insertMany([
-        'name' => 'Coyotito',
-        'description' => 'Lorem ipsum dolor it',
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => 'default', 'name' => 'description', 'payload' => json_encode('Lorem ipsum dolor it')],
     ]);
 
     $defaultSettings = new class ($this->repo) extends \Coyotito\LaravelSettings\Settings {
@@ -63,12 +62,9 @@ it('can fill properties', function () {
 });
 
 it('update settings', function () {
-    $this->repo->insertMany([
-        'debug' => true,
-        'config' => [
-            'name' => 'Coyotito',
-            'description' => 'Lorem ipsum dolor it'
-        ],
+    Setting::insert([
+        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => 'default', 'name' => 'config', 'payload' => json_encode(['name' => 'Coyotito', 'description' => 'Lorem ipsum dolor it'])],
     ]);
 
     $defaultSettings = new class ($this->repo) extends \Coyotito\LaravelSettings\Settings {
@@ -98,8 +94,8 @@ it('update settings', function () {
 });
 
 test('dynamic properties are not persisted', function () {
-    $this->repo->insertMany([
-        'name' => 'Coyotito',
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
     ]);
 
     $defaultSettings = new class ($this->repo) extends \Coyotito\LaravelSettings\Settings {
@@ -125,4 +121,3 @@ test('dynamic properties are not persisted', function () {
         ->not->toContain('Lorem ipsum')
         ->toContain('Hello, World!');
 });
-
