@@ -7,7 +7,7 @@ namespace Coyotito\LaravelSettings\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * Example Facade
+ * Schema class to define settings
  *
  * @mixin \Coyotito\LaravelSettings\Database\Schema\Builder
  */

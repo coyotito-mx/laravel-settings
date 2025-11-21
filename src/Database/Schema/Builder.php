@@ -17,7 +17,7 @@ final class Builder
     }
 
     /**
-     * Add setting in the given group
+     * Add settings to the given group
      *
      * @param string $group
      * @param Closure(group: Blueprint)
@@ -46,7 +46,7 @@ final class Builder
     }
 
     /**
-     * Remove all the setting from the given group
+     * Drop all the settings from the given group
      */
     public function drop(string $group): void
     {
@@ -56,7 +56,7 @@ final class Builder
     }
 
     /**
-     * Rename the a group
+     * Rename the given group
      */
     public function rename(string $oldGroup, string $newGroup): void
     {
