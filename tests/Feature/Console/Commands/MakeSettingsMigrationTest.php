@@ -26,7 +26,7 @@ beforeAll(function () {
 });
 
 beforeEach(function () {
-    rmdir_recursive(database_path('migrations'), dot_files: false);
+    rmdir_recursive(database_path('migrations'), delete_root: false);
     rmdir_recursive(app_path('Settings'));
 });
 
