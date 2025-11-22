@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Repositories;
 
-use Arr;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use RuntimeException;
 
 class EloquentRepository implements Contracts\Repository
@@ -31,18 +32,28 @@ class EloquentRepository implements Contracts\Repository
             ];
         }
 
-        $settings = $this->withGroup()->whereIn('name', array_is_list($setting) ? $setting : array_keys($setting))->get();
+        $isList = array_is_list($setting);
+        $settingsNames = $isList ? $setting : array_keys($setting);
+        $existingSettings = $this->withGroup()->whereIn('name', $settingsNames)->get(['name', 'payload']);
 
         $collection = collect($setting)
-            ->map(function (mixed $value, string $name) use ($settings) {
-                return $settings->where('name', $name)->first()?->payload ?? $value;
+            ->mapWithKeys(function (mixed $value, int|string $name) use ($existingSettings, $default) : array {
+                if (is_int($name)) {
+                    [$value, $name] = [$name, $value];
+
+                    $value = $default;
+                }
+
+                return [
+                    $name => $existingSettings->where('name', $name)->first()?->payload ?? $value,
+                ];
             });
 
         if ($collection->count() === 1) {
             return $collection->first();
         }
 
-        return $collection->toArray();
+        return $collection->all();
     }
 
     public function getAll(): array
@@ -96,24 +107,19 @@ class EloquentRepository implements Contracts\Repository
             return;
         }
 
-        $settingNames = array_keys($setting);
-
-        $presentSettings = $this->withGroup()->whereIn('name', $settingNames)->pluck('name');
-
         $now = now();
+        $presentSettings = $this->withGroup()->whereIn('name', array_keys($setting))->pluck('name');
 
         $data = collect($setting)
             ->diffKeys($presentSettings)
-            ->map(function (mixed $value, string $name) use ($now): array {
-                return [
+            ->map(fn (mixed $value, string $name): array =>
+                [
                     'name' => $name,
                     'group' => $this->group(),
                     'payload' => $this->castValue($value ?? null),
                     'updated_at' => $now,
                     'created_at' => $now,
-                ];
-            })->toArray();
-
+                ])->toArray();
 
         $this->query()->insert($data);
     }
@@ -129,6 +135,11 @@ class EloquentRepository implements Contracts\Repository
         return (int) $this->withGroup()->whereIn('name', $setting)->delete();
     }
 
+    public function drop(): void
+    {
+        $this->withGroup()->delete();
+    }
+
     public function group(): string
     {
         if (! filled($this->group)) {
@@ -141,11 +152,6 @@ class EloquentRepository implements Contracts\Repository
     public function setGroup(string $group): void
     {
         $this->group = $group;
-    }
-
-    public function drop(): void
-    {
-        $this->withGroup()->delete();
     }
 
     public function renameGroup(string $newGroup): void

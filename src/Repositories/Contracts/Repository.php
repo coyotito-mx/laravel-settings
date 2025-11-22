@@ -34,6 +34,8 @@ interface Repository
 
     /**
      * Delete one or more settings
+     *
+     * @return int The count of deleted settings
      */
     public function delete(string|array $setting): int;
 
