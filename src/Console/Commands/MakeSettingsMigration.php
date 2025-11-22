@@ -5,7 +5,7 @@ namespace Coyotito\LaravelSettings\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use RuntimeException;
-use Str;
+use Illuminate\Support\Str;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
 
@@ -122,14 +122,11 @@ class MakeSettingsMigration extends Command
 
     public function handle(): int
     {
-        // Ensure directory exists
-        if (! $this->fs->isDirectory(app_path('Settings'))) {
-            $this->fs->makeDirectory(app_path('Settings'));
-        }
-
         $this->generateMigration();
 
-        if (! $this->option('without-class')) {
+        if ($this->shouldCreateClass()) {
+            $this->ensureSettingsDirectoryExists();
+
             $this->generateClass();
         }
 
@@ -138,24 +135,12 @@ class MakeSettingsMigration extends Command
         return self::SUCCESS;
     }
 
-    protected function generateMigration(): bool
-    {
-        $migration = $this->createMigration();
-        $migration_stub = $this->resolveStubPath($this->getStub());
-
-        $content = $this->replaceIn(replacers: [
-            '{{group}}' => $this->getGroup(),
-        ], content: $this->fs->get($migration_stub));
-
-        return (bool) $this->fs->put(
-            $migration,
-            $content,
-        );
-    }
-
+    /**
+     * Generate Settings Class
+     */
     protected function generateClass(): bool
     {
-        $class = $this->createClass();
+        $class = $this->getClassPath();
         $class_stub = $this->resolveStubPath('class.stub');
 
         $content = $this->replaceIn(replacers: [
@@ -169,15 +154,27 @@ class MakeSettingsMigration extends Command
         );
     }
 
-    protected function replaceIn(array $replacers, string $content): string
+    /**
+     * Generate the migration file
+     */
+    protected function generateMigration(): bool
     {
-        return Str::replace(
-            array_keys($replacers),
-            array_values($replacers),
+        $migration = $this->getMigrationPath();
+        $migration_stub = $this->resolveStubPath($this->getStub());
+
+        $content = $this->replaceIn(replacers: [
+            '{{group}}' => $this->getGroup(),
+        ], content: $this->fs->get($migration_stub));
+
+        return (bool) $this->fs->put(
+            $migration,
             $content,
         );
     }
 
+    /**
+     * Get the group for the settings
+     */
     public function getGroup(): string
     {
         $group = Str::of($this->option('group') ?? 'default')->snake()->lower()->toString();
@@ -189,7 +186,12 @@ class MakeSettingsMigration extends Command
         return $group;
     }
 
-    protected function createClass(): string
+    /**
+     * Get the class path where the class settings will live
+     *
+     * @return string
+     */
+    protected function getClassPath(): string
     {
         $className = $this->getClassName();
 
@@ -202,22 +204,10 @@ class MakeSettingsMigration extends Command
         );
     }
 
-    protected function getClassName(): string
-    {
-        $className = Str::of($this->option('class-name') ?? '')->lower()->snake()->toString() ?: $this->getGroup();
-
-        if ($className === 'default') {
-            $className = 'default-settings';
-        }
-
-        $className = Str::of($className)->slug()->pascal()->append('.php')->toString();
-
-        $this->ensureIsNotReserved($className);
-
-        return $className;
-    }
-
-    protected function createMigration(): string
+    /**
+     * The the migration path where the migration setting will live
+     */
+    protected function getMigrationPath(): string
     {
         $group = $this->option('group') ?? 'default';
         $migration_filename = implode('_', [now()->format('Y_m_d_his'), 'create', $group, 'settings']).'.php';
@@ -237,11 +227,27 @@ class MakeSettingsMigration extends Command
     }
 
     /**
-     * Get the stub file for the generator.
-     *
-     * @return string
+     * Get the calculated settings class name
      */
-    protected function getStub()
+    protected function getClassName(): string
+    {
+        $className = Str::of($this->option('class-name') ?? '')->lower()->snake()->toString() ?: $this->getGroup();
+
+        if ($className === 'default') {
+            $className = 'default-settings';
+        }
+
+        $className = Str::of($className)->slug()->pascal()->append('.php')->toString();
+
+        $this->ensureIsNotReserved($className);
+
+        return $className;
+    }
+
+    /**
+     * Get the stub file for the generator.
+     */
+    protected function getStub(): string
     {
         $stub = 'default';
 
@@ -252,6 +258,27 @@ class MakeSettingsMigration extends Command
         return "migration-$stub.stub";
     }
 
+    /**
+     * Ensure settings directory exists
+     */
+    protected function ensureSettingsDirectoryExists(): void
+    {
+        $this->fs->ensureDirectoryExists(app_path('Settings'), recursive: false);
+    }
+
+    /**
+     * Check if we should need to create the Settings class
+     */
+    protected function shouldCreateClass(): bool
+    {
+        return ! $this->option('without-class');
+    }
+
+    /**
+     * Check if the given name is a reserved name
+     *
+     * @throws RuntimeException if the provided name is reserved
+     */
     protected function ensureIsNotReserved(string $name): void
     {
         if (in_array($name, $this->reservedNames)) {
@@ -270,10 +297,27 @@ class MakeSettingsMigration extends Command
         return package_path('stubs', $stub);
     }
 
+    /**
+     * Get the Laravel app namespace
+     * @param string $namespace
+     * @return string
+     */
     protected function getNamespace(string $namespace): string
     {
         $rootNamespace = $this->laravel->getNamespace();
 
         return trim($rootNamespace, '\\')."\\$namespace";
+    }
+
+    /**
+     * Search and replace in the content
+     */
+    protected function replaceIn(array $replacers, string $content): string
+    {
+        return Str::replace(
+            array_keys($replacers),
+            array_values($replacers),
+            $content,
+        );
     }
 }
