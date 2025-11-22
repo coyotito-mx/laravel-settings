@@ -4,6 +4,7 @@ namespace Coyotito\LaravelSettings\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use RuntimeException;
 use Str;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
@@ -27,6 +28,93 @@ class MakeSettingsMigration extends Command
      */
     protected $description = 'Create a new class and migration for settings';
 
+    protected $reservedNames = [
+        'settings',
+        '__halt_compiler',
+        'abstract',
+        'and',
+        'array',
+        'as',
+        'break',
+        'callable',
+        'case',
+        'catch',
+        'class',
+        'clone',
+        'const',
+        'continue',
+        'declare',
+        'default',
+        'die',
+        'do',
+        'echo',
+        'else',
+        'elseif',
+        'empty',
+        'enddeclare',
+        'endfor',
+        'endforeach',
+        'endif',
+        'endswitch',
+        'endwhile',
+        'enum',
+        'eval',
+        'exit',
+        'extends',
+        'false',
+        'final',
+        'finally',
+        'fn',
+        'for',
+        'foreach',
+        'function',
+        'global',
+        'goto',
+        'if',
+        'implements',
+        'include',
+        'include_once',
+        'instanceof',
+        'insteadof',
+        'interface',
+        'isset',
+        'list',
+        'match',
+        'namespace',
+        'new',
+        'or',
+        'parent',
+        'print',
+        'private',
+        'protected',
+        'public',
+        'readonly',
+        'require',
+        'require_once',
+        'return',
+        'self',
+        'static',
+        'switch',
+        'throw',
+        'trait',
+        'true',
+        'try',
+        'unset',
+        'use',
+        'var',
+        'while',
+        'xor',
+        'yield',
+        '__CLASS__',
+        '__DIR__',
+        '__FILE__',
+        '__FUNCTION__',
+        '__LINE__',
+        '__METHOD__',
+        '__NAMESPACE__',
+        '__TRAIT__',
+    ];
+
     public function __construct(protected Filesystem $fs)
     {
         return parent::__construct();
@@ -34,7 +122,6 @@ class MakeSettingsMigration extends Command
 
     public function handle(): int
     {
-
         // Ensure directory exists
         if (! $this->fs->isDirectory(app_path('Settings'))) {
             $this->fs->makeDirectory(app_path('Settings'));
@@ -93,7 +180,13 @@ class MakeSettingsMigration extends Command
 
     public function getGroup(): string
     {
-        return Str::of($this->option('group') ?? 'default')->snake()->lower()->toString();
+        $group = Str::of($this->option('group') ?? 'default')->snake()->lower()->toString();
+
+        if ($group !== 'default') {
+            $this->ensureIsNotReserved($group);
+        }
+
+        return $group;
     }
 
     protected function createClass(): string
@@ -117,7 +210,11 @@ class MakeSettingsMigration extends Command
             $className = 'default-settings';
         }
 
-        return Str::of($className)->slug()->pascal()->append('.php')->toString();
+        $className = Str::of($className)->slug()->pascal()->append('.php')->toString();
+
+        $this->ensureIsNotReserved($className);
+
+        return $className;
     }
 
     protected function createMigration(): string
@@ -126,7 +223,7 @@ class MakeSettingsMigration extends Command
         $migration_filename = implode('_', [now()->format('Y_m_d_his'), 'create', $group, 'settings']).'.php';
 
         // Ensure the group migration is not already created
-        if ($this->fs->glob(database_path("migrations/*_*_*_*create_{$group}_settings.php"))) {
+        if ($this->fs->glob(database_path("migrations/*_create_{$group}_settings.php"))) {
             throw new \Exception("The migration [$group] settings already exists");
         }
 
@@ -153,6 +250,13 @@ class MakeSettingsMigration extends Command
         }
 
         return "migration-$stub.stub";
+    }
+
+    protected function ensureIsNotReserved(string $name): void
+    {
+        if (in_array($name, $this->reservedNames)) {
+            throw new RuntimeException("The provided name [$name] is reserved");
+        }
     }
 
     /**
