@@ -2,7 +2,6 @@
 
 use Coyotito\LaravelSettings\Models\Setting;
 use Illuminate\Support\Facades\Schema;
-use Pest\Expectation;
 
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;

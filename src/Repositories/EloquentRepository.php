@@ -6,7 +6,6 @@ namespace Coyotito\LaravelSettings\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use RuntimeException;
 
 class EloquentRepository implements Contracts\Repository
@@ -37,7 +36,7 @@ class EloquentRepository implements Contracts\Repository
         $existingSettings = $this->withGroup()->whereIn('name', $settingsNames)->get(['name', 'payload']);
 
         $collection = collect($setting)
-            ->mapWithKeys(function (mixed $value, int|string $name) use ($existingSettings, $default) : array {
+            ->mapWithKeys(function (mixed $value, int|string $name) use ($existingSettings, $default): array {
                 if (is_int($name)) {
                     [$value, $name] = [$name, $value];
 
