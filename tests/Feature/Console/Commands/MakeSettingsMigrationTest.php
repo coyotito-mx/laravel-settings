@@ -6,6 +6,24 @@ use Coyotito\LaravelSettings\Settings;
 use function Pest\Laravel\artisan;
 
 beforeAll(function () {
+    expect()->extend('toBeInDirectory', function (string $directory) {
+        expect($directory)->toBeDirectory();
+
+        $ext = pathinfo($this->value, PATHINFO_EXTENSION);
+
+        $files = glob($directory.DIRECTORY_SEPARATOR."*.$ext");
+        $files = array_map(fn (string $file): string => pathinfo($file, PATHINFO_BASENAME), $files ?: []);
+
+        if (empty($files)) {
+            return test()->fail("The file [$this->value] is not in the directory [$directory]");
+        }
+
+        $filesInDirectory = implode(", ", $files);
+
+        return expect(in_array($this->value, $files))
+            ->toBeTrue("The file [$this->value] is not one of the following files [$filesInDirectory] in [$directory]");
+    });
+
     expect()->extend('toBeClassSettings', function () {
         $segments = explode('\\', trim($this->value, '\\'));
         $root = array_shift($segments);
@@ -17,7 +35,7 @@ beforeAll(function () {
         $file = array_pop($segments).'.php';
         $filepath = app_path(implode(DIRECTORY_SEPARATOR, [...$segments, $file]));
 
-        expect($filepath)->toBeFile("The given namespace [{$this->value}] is not a file");
+        expect($file)->toBeInDirectory(pathinfo($filepath, PATHINFO_DIRNAME));
 
         $settingsClass = (function (string $filepath, string $class) {
             require_once $filepath;
