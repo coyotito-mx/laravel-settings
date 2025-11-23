@@ -143,10 +143,13 @@ class MakeSettingsMigration extends Command
     protected function generateClass(): bool
     {
         $class = $this->getClassPath();
-        $class_stub = $this->resolveStubPath('class.stub');
+        $class_stub = $this->resolveStubPath(
+            $this->getStub('class')
+        );
 
         $content = $this->replaceIn(replacers: [
             '{{class}}' => Str::of(pathinfo($class, PATHINFO_FILENAME))->pascal()->toString(),
+            '{{group}}' => $this->getGroup(),
             '{{namespace}}' => $this->getNamespace('Settings'),
         ], content: $this->fs->get($class_stub));
 
@@ -162,7 +165,9 @@ class MakeSettingsMigration extends Command
     protected function generateMigration(): bool
     {
         $migration = $this->getMigrationPath();
-        $migration_stub = $this->resolveStubPath($this->getStub());
+        $migration_stub = $this->resolveStubPath(
+            $this->getStub('migration')
+        );
 
         $content = $this->replaceIn(replacers: [
             '{{group}}' => $this->getGroup(),
@@ -247,7 +252,7 @@ class MakeSettingsMigration extends Command
     /**
      * Get the stub file for the generator.
      */
-    protected function getStub(): string
+    protected function getStub(string $type): string
     {
         $stub = 'default';
 
@@ -255,7 +260,7 @@ class MakeSettingsMigration extends Command
             $stub = 'group';
         }
 
-        return "migration-$stub.stub";
+        return "$type-$stub.stub";
     }
 
     /**

@@ -64,6 +64,55 @@ it('can generate default migration', function () {
 
     expect('App\\Settings\\DefaultSettings')
         ->toBeClassSettings();
+
+    $classFile = app_path('Settings'.DIRECTORY_SEPARATOR.'DefaultSettings.php');
+    $migrationFile = glob(database_path('migrations'.DIRECTORY_SEPARATOR.'*_create_default_settings.php'))[0];
+
+    expect($migrationFile)
+        ->toBeFile()
+        ->and(file_get_contents($classFile))
+        ->toBe(<<<'PHP'
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\Settings;
+
+        use Coyotito\LaravelSettings\Settings;
+
+        class DefaultSettings extends Settings
+        {
+            // Add your typed settings (properties)
+        }
+
+        PHP)
+        ->and(file_get_contents($migrationFile))
+        ->toBe(<<<'PHP'
+        <?php
+
+        declare(strict_types=1);
+
+
+        use Illuminate\Database\Migrations\Migration;
+        use Coyotito\LaravelSettings\Facades\Schema;
+        use Coyotito\LaravelSettings\Database\Schema\Blueprint;
+
+        return new class extends Migration
+        {
+            public function up(): void
+            {
+                Schema::default(function (Blueprint $group) {
+                    // Add your settings here
+                });
+            }
+
+            public function down(): void
+            {
+                // Remove your settings here
+            }
+        };
+
+        PHP);
 });
 
 it('can create settings with different class name', function () {
@@ -75,6 +124,26 @@ it('can create settings with different class name', function () {
 
     expect('App\\Settings\\General')
         ->toBeClassSettings();
+
+    $classFile = app_path('Settings'.DIRECTORY_SEPARATOR.'General.php');
+
+    expect($classFile)
+        ->and(file_get_contents($classFile))
+        ->toBe(<<<'PHP'
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\Settings;
+
+        use Coyotito\LaravelSettings\Settings;
+
+        class General extends Settings
+        {
+            // Add your typed settings (properties)
+        }
+
+        PHP);
 });
 
 it('cannot replace already created migration', function () {
@@ -117,6 +186,61 @@ it('can create settings for a custom group', function () {
 
     expect($files)->not->toBeEmpty()
         ->and($files)->toHaveCount(1);
+
+    $classFile = app_path('Settings'.DIRECTORY_SEPARATOR.'Billing.php');
+    $migrationFile = glob(database_path('migrations'.DIRECTORY_SEPARATOR.'*_create_billing_settings.php'))[0];
+
+    expect($migrationFile)
+        ->toBeFile()
+        ->and(file_get_contents($classFile))
+        ->toBe(<<<'PHP'
+        <?php
+
+        declare(strict_types=1);
+
+        namespace App\Settings;
+
+        use Coyotito\LaravelSettings\Settings;
+
+        class Billing extends Settings
+        {
+            /**
+             * Group name
+             */
+            public static function group(): string
+            {
+                return 'billing';
+            }
+        }
+
+        PHP)
+        ->and(file_get_contents($migrationFile))
+        ->toBe(<<<'PHP'
+        <?php
+
+        declare(strict_types=1);
+
+
+        use Illuminate\Database\Migrations\Migration;
+        use Coyotito\LaravelSettings\Facades\Schema;
+        use Coyotito\LaravelSettings\Database\Schema\Blueprint;
+
+        return new class extends Migration
+        {
+            public function up(): void
+            {
+                Schema::in('billing', function (Blueprint $group) {
+                    // Add your settings here
+                });
+            }
+
+            public function down(): void
+            {
+                // Remove your settings here
+            }
+        };
+
+        PHP);
 });
 
 it('can create settings class with different name than the group', function () {
