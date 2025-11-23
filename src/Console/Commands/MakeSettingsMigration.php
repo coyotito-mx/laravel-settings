@@ -21,7 +21,8 @@ class MakeSettingsMigration extends Command
     protected $signature = 'make:settings
                             { --g|group=default : The name of the group }
                             { --c|class-name= : The name of the settings class }
-                            { --without-class : Without the class settings }';
+                            { --without-class : Without the class settings }
+                            { --without-migration : Without migration settings }';
 
     /**
      * The console command description.
@@ -127,15 +128,19 @@ class MakeSettingsMigration extends Command
      */
     public function handle(): int
     {
-        $this->generateMigration();
+        if ($migration = $this->shouldCreateMigration()) {
+            $this->generateMigration();
 
-        if ($this->shouldCreateClass()) {
+            $this->components->success("Migration for [{$this->getGroup()}] group created");
+        }
+
+        if (! $migration || $this->shouldCreateClass()) {
             $this->ensureSettingsDirectoryExists();
 
             $this->generateClass();
-        }
 
-        $this->components->success("Migration for [{$this->getGroup()}] group created");
+            $this->components->success("Class [{$this->getClassName()}] for group [{$this->getGroup()}]");
+        }
 
         return self::SUCCESS;
     }
@@ -203,7 +208,7 @@ class MakeSettingsMigration extends Command
      */
     protected function getClassPath(): string
     {
-        $className = $this->getClassName();
+        $className = $this->getClassName().'.php';
 
         return app_path(
             'Settings'.
@@ -243,7 +248,7 @@ class MakeSettingsMigration extends Command
             $className = 'default-settings';
         }
 
-        $className = Str::studly($className).'.php';
+        $className = Str::studly($className);
 
         $this->ensureIsNotReserved($className);
 
@@ -278,6 +283,14 @@ class MakeSettingsMigration extends Command
     protected function shouldCreateClass(): bool
     {
         return ! $this->option('without-class');
+    }
+
+    /**
+     * Check if we should need to create the Settings migration
+     */
+    protected function shouldCreateMigration(): bool
+    {
+        return ! $this->option('without-migration');
     }
 
     /**

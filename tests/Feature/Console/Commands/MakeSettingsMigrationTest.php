@@ -3,7 +3,7 @@
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
 
-use function Orchestra\Testbench\join_paths;
+use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeAll(function () {
@@ -161,6 +161,38 @@ it('only generates the migration file', function () {
 
     expect('App\\Settings\\DefaultSettings')
         ->not->toBeClassSettings();
+});
+
+it('only generates the settings class', function () {
+    artisan('make:settings', ['--without-migration' => true])
+        ->doesntExpectOutputToContain('Migration for [default] group created')
+        ->expectsOutputToContain('Class [DefaultSettings] for group [default]')
+        ->assertSuccessful();
+
+    expect('App\\Settings\\DefaultSettings')
+        ->toBeClassSettings();
+
+    $pattern = database_path(join_paths('migrations', '*_create_default_settings.php'));
+
+    expect(glob($pattern))
+        ->toBeEmpty()
+        ->toHaveCount(0);
+});
+
+it('generate setting class even when both are specified to be skipped', function () {
+    artisan('make:settings', ['--without-migration' => true, '--without-class' => true])
+        ->doesntExpectOutputToContain('Migration for [default] group created')
+        ->expectsOutputToContain('Class [DefaultSettings] for group [default]')
+        ->assertSuccessful();
+
+    expect('App\\Settings\\DefaultSettings')
+        ->toBeClassSettings();
+
+    $pattern = database_path(join_paths('migrations', '*_create_default_settings.php'));
+
+    expect(glob($pattern))
+        ->toBeEmpty()
+        ->toHaveCount(0);
 });
 
 it('creates a migration file for the default group', function () {
