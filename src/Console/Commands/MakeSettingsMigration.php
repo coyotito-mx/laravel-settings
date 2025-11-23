@@ -266,7 +266,7 @@ class MakeSettingsMigration extends Command
      */
     protected function ensureSettingsDirectoryExists(): void
     {
-        $this->fs->ensureDirectoryExists(app_path('Settings'), recursive: false);
+        $this->fs->ensureDirectoryExists(app_path('Settings'));
     }
 
     /**
