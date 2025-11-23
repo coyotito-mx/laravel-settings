@@ -3,6 +3,7 @@
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
 
+use function Orchestra\Testbench\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeAll(function () {
@@ -11,7 +12,7 @@ beforeAll(function () {
 
         $ext = pathinfo($this->value, PATHINFO_EXTENSION);
 
-        $files = glob($directory.DIRECTORY_SEPARATOR."*.$ext");
+        $files = glob(join_paths($directory, "*.$ext"));
         $files = array_map(fn (string $file): string => pathinfo($file, PATHINFO_BASENAME), $files ?: []);
 
         if (empty($files)) {
@@ -65,8 +66,8 @@ it('can generate default migration', function () {
     expect('App\\Settings\\DefaultSettings')
         ->toBeClassSettings();
 
-    $classFile = app_path('Settings'.DIRECTORY_SEPARATOR.'DefaultSettings.php');
-    $migrationFile = glob(database_path('migrations'.DIRECTORY_SEPARATOR.'*_create_default_settings.php'))[0];
+    $classFile = join_paths(app_path('Settings'), 'DefaultSettings.php');
+    $migrationFile = glob(join_paths(database_path('migrations'), '*_create_default_settings.php'))[0];
 
     expect($migrationFile)
         ->toBeFile()
@@ -125,7 +126,7 @@ it('can create settings with different class name', function () {
     expect('App\\Settings\\General')
         ->toBeClassSettings();
 
-    $classFile = app_path('Settings'.DIRECTORY_SEPARATOR.'General.php');
+    $classFile = join_paths(app_path('Settings'), 'General.php');
 
     expect($classFile)
         ->and(file_get_contents($classFile))
@@ -187,8 +188,8 @@ it('can create settings for a custom group', function () {
     expect($files)->not->toBeEmpty()
         ->and($files)->toHaveCount(1);
 
-    $classFile = app_path('Settings'.DIRECTORY_SEPARATOR.'Billing.php');
-    $migrationFile = glob(database_path('migrations'.DIRECTORY_SEPARATOR.'*_create_billing_settings.php'))[0];
+    $classFile = join_paths(app_path('Settings'), 'Billing.php');
+    $migrationFile = glob(join_paths(database_path('migrations'), '*_create_billing_settings.php'))[0];
 
     expect($migrationFile)
         ->toBeFile()
