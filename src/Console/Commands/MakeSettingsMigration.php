@@ -231,16 +231,13 @@ class MakeSettingsMigration extends Command
      */
     protected function getClassName(): string
     {
-        /** @var ?string */
-        $className = $this->option('class-name');
-
-        $className = Str::of($className)->lower()->snake()->toString() ?: $this->getGroup();
+        $className = Str::snake($this->option('class-name') ?: $this->getGroup());
 
         if ($className === 'default') {
             $className = 'default-settings';
         }
 
-        $className = Str::of($className)->slug()->pascal()->append('.php')->toString();
+        $className = Str::studly($className).'.php';
 
         $this->ensureIsNotReserved($className);
 
