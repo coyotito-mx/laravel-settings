@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Coyotito\LaravelSettings\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -117,7 +119,7 @@ class MakeSettingsMigration extends Command
 
     public function __construct(protected Filesystem $fs)
     {
-        return parent::__construct();
+        parent::__construct();
     }
 
     public function handle(): int
@@ -231,7 +233,10 @@ class MakeSettingsMigration extends Command
      */
     protected function getClassName(): string
     {
-        $className = Str::of($this->option('class-name') ?? '')->lower()->snake()->toString() ?: $this->getGroup();
+        /** @var ?string */
+        $className = $this->option('class-name');
+
+        $className = Str::of($className)->lower()->snake()->toString() ?: $this->getGroup();
 
         if ($className === 'default') {
             $className = 'default-settings';

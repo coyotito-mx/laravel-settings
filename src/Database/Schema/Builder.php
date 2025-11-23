@@ -20,7 +20,7 @@ final class Builder
      * Add settings to the given group
      *
      * @param string $group
-     * @param Closure(group: Blueprint)
+     * @param \Closure(Blueprint): void $callback
      * @return void
      */
     public function in(string $group, \Closure $callback): void
@@ -28,13 +28,13 @@ final class Builder
         $repo = tap($this->repo, fn ($repo) => $repo->setGroup($group));
         $blueprint = new Blueprint($repo);
 
-        $callback(group: $blueprint);
+        $callback($blueprint);
     }
 
     /**
      * Add settings to the default group
      *
-     * @param Closure(group: Blueprint) $callback
+     * @param Closure(Blueprint): void $callback
      * @return void
      */
     public function default(\Closure $callback): void
@@ -50,9 +50,7 @@ final class Builder
      */
     public function drop(string $group): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup($group));
-
-        $repo->deleteAll();
+        tap($this->repo, fn ($repo) => $repo->setGroup($group))->drop();
     }
 
     /**

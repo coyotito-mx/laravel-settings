@@ -16,7 +16,6 @@ class EloquentRepository implements Contracts\Repository
      * Construct the Eloquent repository using the given model as the source
      *
      * @param class-string<\Coyotito\LaravelSettings\Models\Setting> $model
-     * @param null|string $group Name of the group
      */
     public function __construct(protected string $model)
     {
@@ -44,7 +43,7 @@ class EloquentRepository implements Contracts\Repository
                 }
 
                 return [
-                    $name => $existingSettings->where('name', $name)->first()?->payload ?? $value,
+                    $name => $existingSettings->where('name', $name)->first()->payload ?? $value,
                 ];
             });
 

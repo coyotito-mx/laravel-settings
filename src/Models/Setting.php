@@ -11,6 +11,11 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @method \Illuminate\Database\Eloquent\Builder<self> byGroup(string $group)
  *
+ * @property string $name Name of the setting
+ * @property string $group Group where the setting is stored
+ * @property mixed $payload The value of the setting
+ * @property bool $locked if the setting can be updated or deleted
+ *
  * @package Coyotito\LaravelSettings
  */
 final class Setting extends Model
