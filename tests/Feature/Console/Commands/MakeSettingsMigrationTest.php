@@ -2,10 +2,7 @@
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
-use Pest\Expectation;
-use Termwind\Components\Ol;
 
-use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeAll(function () {
