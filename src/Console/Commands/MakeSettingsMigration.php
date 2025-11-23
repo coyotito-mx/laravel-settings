@@ -197,9 +197,7 @@ class MakeSettingsMigration extends Command
     {
         $className = $this->getClassName();
 
-        return base_path(
-            'app'.
-            DIRECTORY_SEPARATOR.
+        return app_path(
             'Settings'.
             DIRECTORY_SEPARATOR.
             $className,
