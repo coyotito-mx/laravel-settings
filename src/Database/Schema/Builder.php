@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings\Database\Schema;
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use Illuminate\Support\Arr;
 
 final class Builder
 {
@@ -42,6 +43,23 @@ final class Builder
         $blueprint = new Blueprint($repo);
 
         $callback($blueprint);
+    }
+
+    /**
+     * Delete setting(s) from the given group
+     */
+    public function delete(string|array $settings, string $group = 'default'): void
+    {
+        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
+        $blueprint = new Blueprint($repo);
+
+        if (is_string($settings)) {
+            $setting = Arr::wrap($settings);
+        }
+
+        foreach ($settings as $setting) {
+            $blueprint->remove($setting);
+        }
     }
 
     /**
