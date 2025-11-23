@@ -20,7 +20,7 @@ class MakeSettingsMigration extends Command
      */
     protected $signature = 'make:settings
                             { --g|group=default : The name of the group }
-                            { --c|class-name : The name of the settings class }
+                            { --c|class-name= : The name of the settings class }
                             { --without-class : Without the class settings }';
 
     /**
