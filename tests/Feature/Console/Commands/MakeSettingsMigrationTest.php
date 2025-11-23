@@ -2,7 +2,10 @@
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
+use Pest\Expectation;
+use Termwind\Components\Ol;
 
+use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeAll(function () {
@@ -19,9 +22,15 @@ beforeAll(function () {
 
         expect($filepath)->toBeFile("The given namespace [{$this->value}] is not a file");
 
-        $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
+        $settingsClass = (function (string $filepath, string $class) {
+            require_once $filepath;
 
-        return expect(new $class($repo))->toBeInstanceOf(Settings::class);
+            $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
+
+            return new $class($repo);
+        })($filepath, $class);
+
+        return expect($settingsClass)->toBeInstanceOf(Settings::class);
     });
 });
 
@@ -95,7 +104,7 @@ it('can create settings for a custom group', function () {
         ->and($files)->toHaveCount(1);
 });
 
-it('can create setting class with different name than the group', function () {
+it('can create settings class with different name than the group', function () {
     expect('App\\Settings\\SiteSettings')
         ->not->toBeClassSettings();
 
