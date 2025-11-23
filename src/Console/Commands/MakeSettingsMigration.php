@@ -122,6 +122,9 @@ class MakeSettingsMigration extends Command
         parent::__construct();
     }
 
+    /**
+     * Handle the command
+     */
     public function handle(): int
     {
         $this->generateMigration();
@@ -214,7 +217,7 @@ class MakeSettingsMigration extends Command
      */
     protected function getMigrationPath(): string
     {
-        $group = $this->option('group') ?? 'default';
+        $group = $this->getGroup();
         $migration_filename = implode('_', [now()->format('Y_m_d_his'), 'create', $group, 'settings']).'.php';
 
         // Ensure the group migration is not already created
@@ -222,9 +225,7 @@ class MakeSettingsMigration extends Command
             throw new \Exception("The migration [$group] settings already exists");
         }
 
-        return base_path(
-            'database'.
-            DIRECTORY_SEPARATOR.
+        return database_path(
             'migrations'.
             DIRECTORY_SEPARATOR.
             $migration_filename,
@@ -256,7 +257,7 @@ class MakeSettingsMigration extends Command
     {
         $stub = 'default';
 
-        if ($this->option('group') !== 'default') {
+        if ($this->getGroup() !== 'default') {
             $stub = 'group';
         }
 
@@ -293,9 +294,6 @@ class MakeSettingsMigration extends Command
 
     /**
      * Resolve the fully-qualified path to the stub.
-     *
-     * @param  string  $stub
-     * @return string
      */
     protected function resolveStubPath($stub)
     {
@@ -304,12 +302,10 @@ class MakeSettingsMigration extends Command
 
     /**
      * Get the Laravel app namespace
-     * @param string $namespace
-     * @return string
      */
     protected function getNamespace(string $namespace): string
     {
-        $rootNamespace = $this->laravel->getNamespace();
+        $rootNamespace = $this->getLaravel()->getNamespace();
 
         return trim($rootNamespace, '\\')."\\$namespace";
     }

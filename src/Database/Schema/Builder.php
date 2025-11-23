@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Database\Schema;
 
-use Closure;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 
 final class Builder
@@ -19,8 +18,8 @@ final class Builder
     /**
      * Add settings to the given group
      *
-     * @param string $group
-     * @param \Closure(Blueprint): void $callback
+     * @param string $group Name of the group
+     * @param \Closure(Blueprint $group): void $callback
      * @return void
      */
     public function in(string $group, \Closure $callback): void
@@ -34,7 +33,7 @@ final class Builder
     /**
      * Add settings to the default group
      *
-     * @param Closure(Blueprint): void $callback
+     * @param \Closure(Blueprint $group): void $callback
      * @return void
      */
     public function default(\Closure $callback): void

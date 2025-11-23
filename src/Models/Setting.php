@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property mixed $payload The value of the setting
  * @property bool $locked if the setting can be updated or deleted
  *
+ * @mixin Model
+ *
  * @package Coyotito\LaravelSettings
  */
 final class Setting extends Model
@@ -32,9 +34,12 @@ final class Setting extends Model
         'payload' => 'json',
     ];
 
-    public function locked(): void
+    /**
+     * Lock setting
+     */
+    public function lock(): void
     {
-        if ($this->locked) {
+        if ($this->locked()) {
             return;
         }
 
@@ -43,9 +48,12 @@ final class Setting extends Model
         $this->save();
     }
 
+    /**
+     * Unlock setting
+     */
     public function unlock(): void
     {
-        if (! $this->isLocked()) {
+        if (! $this->locked()) {
             return;
         }
 
@@ -54,11 +62,21 @@ final class Setting extends Model
         $this->save();
     }
 
-    public function isLocked(): bool
+    /**
+     * Checked if setting is locked
+     */
+    public function locked(): bool
     {
         return $this->locked;
     }
 
+    /**
+     * Scoped by group
+     *
+     * @param mixed $query Model query
+     * @param string $group The group to filter for
+     * @return void
+     */
     public function scopeByGroup($query, string $group): void
     {
         $query->where('group', $group);
@@ -72,8 +90,8 @@ final class Setting extends Model
      */
     public static function verifiedIsLocked(self $setting): void
     {
-        if ($setting->isLocked()) {
-            throw new LockedSettingException('Setting is locked');
+        if ($setting->locked()) {
+            throw new LockedSettingException($setting->name);
         }
     }
 
