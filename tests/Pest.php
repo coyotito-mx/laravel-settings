@@ -11,7 +11,11 @@
 |
 */
 
+use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use function Illuminate\Filesystem\join_paths;
 
 uses(Tests\TestCase::class)
     ->use(RefreshDatabase::class)
@@ -27,6 +31,48 @@ uses(Tests\TestCase::class)
 | to assert different things. Of course, you may extend the Expectation API at any time.
 |
 */
+
+expect()->extend('toBeInDirectory', function (string $directory) {
+    expect($directory)->toBeDirectory();
+
+    $ext = pathinfo($this->value, PATHINFO_EXTENSION);
+
+    $files = glob(join_paths($directory, "*.$ext"));
+    $files = array_map(fn (string $file): string => pathinfo($file, PATHINFO_BASENAME), $files ?: []);
+
+    if (empty($files)) {
+        return test()->fail("The file [$this->value] is not in the directory [$directory]");
+    }
+
+    $filesInDirectory = implode(", ", $files);
+
+    return expect(in_array($this->value, $files))
+        ->toBeTrue("The file [$this->value] is not one of the following files [$filesInDirectory] in [$directory]");
+});
+
+expect()->extend('toBeClassSettings', function () {
+    $segments = explode('\\', trim($this->value, '\\'));
+    $root = array_shift($segments);
+
+    expect($root)->toBe('App');
+
+    $class = '\\'.implode('\\', [$root, ...$segments]);
+
+    $file = array_pop($segments).'.php';
+    $filepath = app_path(implode(DIRECTORY_SEPARATOR, [...$segments, $file]));
+
+    expect($file)->toBeInDirectory(pathinfo($filepath, PATHINFO_DIRNAME));
+
+    $settingsClass = (function (string $filepath, string $class) {
+        require_once $filepath;
+
+        $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
+
+        return new $class($repo);
+    })($filepath, $class);
+
+    return expect($settingsClass)->toBeInstanceOf(Settings::class);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -48,31 +94,6 @@ uses(Tests\TestCase::class)
  */
 function rmdir_recursive(string $directory, bool $delete_root = true): bool
 {
-    $walk = static function (string $root) use (&$walk, $delete_root): bool {
-        foreach (scandir($root) as $file) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
-
-            $filepath = implode(DIRECTORY_SEPARATOR, [$root, $file]);
-
-            if (is_dir($filepath)) {
-                $walk($filepath, false);
-                rmdir($filepath);
-
-                continue;
-            }
-
-            unlink($filepath);
-        }
-
-        if ($delete_root) {
-            return rmdir($root);
-        }
-
-        return true;
-    };
-
     if (! file_exists($directory)) {
         return false;
     }
@@ -81,5 +102,33 @@ function rmdir_recursive(string $directory, bool $delete_root = true): bool
         throw new \RuntimeException('The provided path is not a directory');
     }
 
-    return $walk($directory, true);
+    $walk = static function (string $root, bool $delete_root) use (&$walk): bool {
+        $files = scandir($root);
+
+        if ($files === false) {
+            throw new \RuntimeException("Unable to read directory: {$root}");
+        }
+
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            $filepath = join_paths($root, $file);
+
+            if (is_dir($filepath)) {
+                $walk($filepath, true);
+
+                continue;
+            }
+
+            if (! unlink($filepath)) {
+                throw new \RuntimeException("Unable to delete file: {$filepath}");
+            }
+        }
+
+        return $delete_root ? rmdir($root) : true;
+    };
+
+    return $walk($directory, $delete_root);
 }

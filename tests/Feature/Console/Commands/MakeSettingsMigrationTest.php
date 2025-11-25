@@ -1,56 +1,14 @@
 <?php
 
-use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use Coyotito\LaravelSettings\Settings;
-
 use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
-beforeAll(function () {
-    expect()->extend('toBeInDirectory', function (string $directory) {
-        expect($directory)->toBeDirectory();
-
-        $ext = pathinfo($this->value, PATHINFO_EXTENSION);
-
-        $files = glob(join_paths($directory, "*.$ext"));
-        $files = array_map(fn (string $file): string => pathinfo($file, PATHINFO_BASENAME), $files ?: []);
-
-        if (empty($files)) {
-            return test()->fail("The file [$this->value] is not in the directory [$directory]");
-        }
-
-        $filesInDirectory = implode(", ", $files);
-
-        return expect(in_array($this->value, $files))
-            ->toBeTrue("The file [$this->value] is not one of the following files [$filesInDirectory] in [$directory]");
-    });
-
-    expect()->extend('toBeClassSettings', function () {
-        $segments = explode('\\', trim($this->value, '\\'));
-        $root = array_shift($segments);
-
-        expect($root)->toBe('App');
-
-        $class = '\\'.implode('\\', [$root, ...$segments]);
-
-        $file = array_pop($segments).'.php';
-        $filepath = app_path(implode(DIRECTORY_SEPARATOR, [...$segments, $file]));
-
-        expect($file)->toBeInDirectory(pathinfo($filepath, PATHINFO_DIRNAME));
-
-        $settingsClass = (function (string $filepath, string $class) {
-            require_once $filepath;
-
-            $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
-
-            return new $class($repo);
-        })($filepath, $class);
-
-        return expect($settingsClass)->toBeInstanceOf(Settings::class);
-    });
+beforeEach(function () {
+    rmdir_recursive(database_path('migrations'), delete_root: false);
+    rmdir_recursive(app_path('Settings'));
 });
 
-beforeEach(function () {
+afterEach(function () {
     rmdir_recursive(database_path('migrations'), delete_root: false);
     rmdir_recursive(app_path('Settings'));
 });

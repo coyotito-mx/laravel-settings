@@ -3,15 +3,25 @@
 use Coyotito\LaravelSettings\Models\Setting;
 use Illuminate\Support\Facades\Schema;
 
+use function Pest\Laravel\artisan;
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
 
 beforeEach(function () {
+    rmdir_recursive(database_path('migrations'), delete_root: false);
+
     /** @var \Coyotito\LaravelSettings\Repositories\Contracts\Repository $repo */
     $repo = app()->make('settings.repository');
     $repo->setGroup('default');
 
+    artisan('vendor:publish --tag=laravel-settings-migrations');
+    artisan('migrate');
+
     $this->repo = $repo;
+});
+
+afterEach(function () {
+    rmdir_recursive(database_path('migrations'), delete_root: false);
 });
 
 it('has settings table', function () {

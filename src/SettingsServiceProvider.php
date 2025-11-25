@@ -8,9 +8,11 @@ use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigration;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
+use function Illuminate\Filesystem\join_paths;
 
 class SettingsServiceProvider extends ServiceProvider
 {
@@ -63,18 +65,50 @@ class SettingsServiceProvider extends ServiceProvider
 
     public function bindSettingClasses(): void
     {
-        $classes = config('settings.classes');
+        $classes = $this->loadSettingsClasses();
 
         foreach ($classes as $class) {
-            if (! is_subclass_of($class, Settings::class)) {
-                continue;
-            }
+            $this->app->scoped($class, function () use ($class) {
+                /**
+                 * @var Settings $class
+                 * @var Repository $repository
+                 * */
 
-            $this->app->scoped($class, function ($app) use ($class) {
-                $repository = $app->make('settings.repository');
+                $repository = $this->app->make('settings.repository');
 
                 return new $class($repository);
             });
         }
+    }
+
+    protected function loadSettingsClasses(): array
+    {
+        $classes = $this->getSettingsFromFolder();
+
+        if (empty($classes)) {
+            $classes = config('settings.classes', []);
+        }
+
+        return array_filter($classes, function (string $class): bool {
+            return is_subclass_of("$class", Settings::class);
+        });
+    }
+
+    protected function getSettingsFromFolder(): ?array
+    {
+        $settingsPath = app_path('Settings');
+
+        if (! file_exists($settingsPath)) {
+            return null;
+        }
+
+        $classes = File::glob(join_paths($settingsPath, '*.php')) ?: [];
+        $rootNamespace = $this->app->getNamespace();
+
+        return array_map(static function (string $filepath) use ($rootNamespace): string {
+            $className = pathinfo($filepath, PATHINFO_FILENAME);
+
+            return join('\\', [trim($rootNamespace, '\\'), 'Settings', $className]);
+        }, $classes);
     }
 }
