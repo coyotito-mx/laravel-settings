@@ -1,11 +1,11 @@
 laravel: "@testbench"
 
 providers:
-  Coyotito\LaravelSettings\SettingsServiceProvider
+  - Coyotito\LaravelSettings\SettingsServiceProvider
   # - Workbench\App\Providers\WorkbenchServiceProvider
 
 migrations:
-  - workbench/database/migrations
+  # - workbench/database/migrations
 
 seeders:
   # - Workbench\Database\Seeders\DatabaseSeeder
