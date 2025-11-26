@@ -8,11 +8,10 @@ use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigration;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
+use Coyotito\LaravelSettings\Facades\LaravelSettings;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
-use function Illuminate\Filesystem\join_paths;
 
 class SettingsServiceProvider extends ServiceProvider
 {
@@ -22,6 +21,10 @@ class SettingsServiceProvider extends ServiceProvider
             package_path('config', 'settings.php'),
             'settings',
         );
+
+        $this->app->singleton('settings.manager', function (): LaravelSettingsManager {
+            return new LaravelSettingsManager;
+        });
 
         $this->app->bind('settings.repository', function (): Repository {
             return new EloquentRepository(
@@ -34,6 +37,13 @@ class SettingsServiceProvider extends ServiceProvider
                 repo: $this->app->make('settings.repository'),
             );
         });
+
+        $rootNamespace = trim($this->app->getNamespace(), '\\');
+
+        LaravelSettings::addNamespace(
+            "$rootNamespace\\Settings",
+            app_path('Settings'),
+        );
     }
 
     public function boot(): void
@@ -65,7 +75,7 @@ class SettingsServiceProvider extends ServiceProvider
 
     public function bindSettingClasses(): void
     {
-        $classes = $this->loadSettingsClasses();
+        $classes = LaravelSettings::getClasses();
 
         foreach ($classes as $class) {
             $this->app->scoped($class, function () use ($class) {
@@ -79,36 +89,5 @@ class SettingsServiceProvider extends ServiceProvider
                 return new $class($repository);
             });
         }
-    }
-
-    protected function loadSettingsClasses(): array
-    {
-        $classes = $this->getSettingsFromFolder();
-
-        if (empty($classes)) {
-            $classes = config('settings.classes', []);
-        }
-
-        return array_filter($classes, function (string $class): bool {
-            return is_subclass_of("$class", Settings::class);
-        });
-    }
-
-    protected function getSettingsFromFolder(): ?array
-    {
-        $settingsPath = app_path('Settings');
-
-        if (! file_exists($settingsPath)) {
-            return null;
-        }
-
-        $classes = File::glob(join_paths($settingsPath, '*.php')) ?: [];
-        $rootNamespace = $this->app->getNamespace();
-
-        return array_map(static function (string $filepath) use ($rootNamespace): string {
-            $className = pathinfo($filepath, PATHINFO_FILENAME);
-
-            return join('\\', [trim($rootNamespace, '\\'), 'Settings', $className]);
-        }, $classes);
     }
 }
