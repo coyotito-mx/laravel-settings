@@ -1,12 +1,7 @@
 <?php
 
 use Coyotito\LaravelSettings\Settings;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
-use Symfony\Component\Uid\AbstractUid;
 
-use function Illuminate\Filesystem\join_paths;
-use function Orchestra\Testbench\workbench_path;
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {

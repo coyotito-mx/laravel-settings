@@ -23,7 +23,7 @@ class SettingsServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton('settings.manager', function (): LaravelSettingsManager {
-            return new LaravelSettingsManager;
+            return new LaravelSettingsManager();
         });
 
         $this->app->bind('settings.repository', function (): Repository {
