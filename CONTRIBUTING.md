@@ -1,22 +1,25 @@
-# Contributing to {{package|title}}
+# Contributing to Laravel Settings
 
-Thank you for considering contributing to {{package|title}}! We welcome contributions from the community and are excited to see what you can bring to the project.
+Thank you for considering contributing to Laravel Settings! We welcome contributions from the community and are excited to see what you can bring to the project.
 
 ## How to Contribute
 
 1. **Fork the Repository**: Start by forking the repository to your GitHub account.
 
 2. **Clone the Repository**: Clone your forked repository to your local machine.
+
     ```bash
-    git clone https://github.com/{{namespace|slug,reverse}}.git
+    git clone https://github.com/coyotito/laravel-settings.git
     ```
 
 3. **Create a Branch**: Create a new branch for your feature or bugfix.
+
     ```bash
     git checkout -b feature/your-feature-name
     ```
 
 4. **Install Dependencies**: Install the necessary dependencies using Composer.
+
     ```bash
     composer install
     ```
@@ -24,17 +27,20 @@ Thank you for considering contributing to {{package|title}}! We welcome contribu
 5. **Make Changes**: Make your changes to the codebase.
 
 6. **Run Tests**: Ensure that all tests pass before submitting your changes.
+
     ```bash
     composer run test
     ```
 
 7. **Commit Changes**: Commit your changes with a descriptive commit message.
+
     ```bash
     git add .
     git commit -m "Add feature: your feature description"
     ```
 
 8. **Push Changes**: Push your changes to your forked repository.
+
     ```bash
     git push origin feature/your-feature-name
     ```
@@ -43,9 +49,9 @@ Thank you for considering contributing to {{package|title}}! We welcome contribu
 
 ## Style Guide
 
-- Run the styling tool [Pint](https://laravel.com/docs/11.x/pint#main-content) before committing your changes.
-- Write clear and concise commit messages.
-- Document your code where necessary.
+-   Run the styling tool [Pint](https://laravel.com/docs/11.x/pint#main-content) before committing your changes.
+-   Write clear and concise commit messages.
+-   Document your code where necessary.
 
 ## Reporting Issues
 

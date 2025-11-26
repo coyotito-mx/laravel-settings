@@ -1,21 +1,21 @@
-# {{package|title}}
+# Laravel Settings
 
 ## Description
 
-{{description}}.
+add settings to your site.
 
 ## Installation
 
 You can install the package via Composer:
 
 ```bash
-composer require {{namespace|slug,reverse}}
+composer require coyotito/laravel-settings
 ```
 
 ## Usage
 
 ```php
-use {{namespace}}\Foo;
+use Coyotito\LaravelSettings\Foo;
 
 $instance = new Foo();
 $instance->doSomething();

@@ -1,25 +1,25 @@
-laravel: '@testbench'
+laravel: "@testbench"
 
 providers:
-  {{namespace}}\{{package|title}}ServiceProvider
+  - Coyotito\LaravelSettings\SettingsServiceProvider
   # - Workbench\App\Providers\WorkbenchServiceProvider
 
 migrations:
-  - workbench/database/migrations
+  # - workbench/database/migrations
 
 seeders:
-  - Workbench\Database\Seeders\DatabaseSeeder
+  # - Workbench\Database\Seeders\DatabaseSeeder
 
 workbench:
-  start: '/'
+  start: "/"
   install: true
   health: false
   discovers:
-    web: true
-    api: true
-    commands: true
+    web: false
+    api: false
+    commands: false
     components: false
-    factories: true
+    factories: false
     views: false
   build:
     - asset-publish
