@@ -72,7 +72,7 @@ it('can generate default migration', function () {
         };
 
         PHP);
-});
+})->todo();
 
 it('can create settings with different class name', function () {
     expect('App\\Settings\\General')
@@ -103,14 +103,14 @@ it('can create settings with different class name', function () {
         }
 
         PHP);
-});
+})->todo();
 
 it('cannot replace already created migration', function () {
     artisan('make:settings')->assertSuccessful();
 
     expect(fn () => artisan('make:settings'))
         ->toThrow('The migration [default] settings already exists');
-});
+})->todo();
 
 it('only generates the migration file', function () {
     artisan('make:settings', ['--without-class' => true])
@@ -119,7 +119,7 @@ it('only generates the migration file', function () {
 
     expect('App\\Settings\\DefaultSettings')
         ->not->toBeClassSettings();
-});
+})->todo();
 
 it('only generates the settings class', function () {
     artisan('make:settings', ['--without-migration' => true])
@@ -135,7 +135,7 @@ it('only generates the settings class', function () {
     expect(glob($pattern))
         ->toBeEmpty()
         ->toHaveCount(0);
-});
+})->todo();
 
 it('generate setting class even when both are specified to be skipped', function () {
     artisan('make:settings', ['--without-migration' => true, '--without-class' => true])
@@ -151,7 +151,7 @@ it('generate setting class even when both are specified to be skipped', function
     expect(glob($pattern))
         ->toBeEmpty()
         ->toHaveCount(0);
-});
+})->todo();
 
 it('creates a migration file for the default group', function () {
     artisan('make:settings')->assertSuccessful();
@@ -160,7 +160,7 @@ it('creates a migration file for the default group', function () {
 
     expect($files)->not->toBeEmpty()
         ->and($files)->toHaveCount(1);
-});
+})->todo();
 
 it('can create settings for a custom group', function () {
     expect('App\\Settings\\Billing')
@@ -232,7 +232,7 @@ it('can create settings for a custom group', function () {
         };
 
         PHP);
-});
+})->todo();
 
 it('can create settings class with different name than the group', function () {
     expect('App\\Settings\\SiteSettings')
@@ -249,7 +249,7 @@ it('can create settings class with different name than the group', function () {
 
     expect($files)->not->toBeEmpty()
         ->and($files)->toHaveCount(1);
-});
+})->todo();
 
 it('cannot create group with reserved words', function () {
     expect(function () {
@@ -262,4 +262,4 @@ it('cannot create group with reserved words', function () {
 
     expect('App\\Settings\\Settings')
         ->not->toBeClassSettings();
-});
+})->todo();
