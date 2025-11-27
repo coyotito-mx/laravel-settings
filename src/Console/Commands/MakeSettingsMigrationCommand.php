@@ -76,14 +76,7 @@ class MakeSettingsMigrationCommand extends Command
      */
     protected function getMigrationName(): string
     {
-        $migrationName = tap(
-            $this->argument('name'),
-            function (string $name): string {
-                $this->ensureNotReserved($name);
-
-                return $this->formatName($name);
-            }
-        );
+        $migrationName = $this->getNameArgument();
 
         $pattern = '/_to_(.+)_group$/';
 

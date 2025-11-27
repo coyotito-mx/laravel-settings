@@ -71,6 +71,8 @@ class MakeSettingsClassCommand extends Command
         );
 
         $this
+            ->addReservedName('Default')
+            ->addReservedName('default')
             ->addReservedName('Settings')
             ->addReservedName('settings')
             ->addReservedName('Setting')
@@ -96,11 +98,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function getClassName(): string
     {
-        $className = $this->argument('name');
-
-        $this->ensureNotReserved($className);
-
-        return $this->formatName($className);
+        return $this->getNameArgument();
     }
 
     /**

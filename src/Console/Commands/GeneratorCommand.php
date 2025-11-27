@@ -46,7 +46,6 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
         'const',
         'continue',
         'declare',
-        'default',
         'die',
         'do',
         'echo',
@@ -189,7 +188,22 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
     }
 
     /**
-     * Get the group
+     * Get the name argument
+     */
+    protected function getNameArgument(): string
+    {
+        return with(
+            $this->argument('name'),
+            function (string $className): string {
+                $this->ensureNotReserved($className);
+
+                return $this->formatName($className);
+            }
+        );
+    }
+
+    /**
+     * Get the group option
      *
      * @return string
      */
@@ -212,13 +226,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
         $type = static::$type;
 
         return [
-            'name' => function () use ($type): string {
-                $value = text(label: "Enter the name of the settings $type", required: true);
-
-                $this->ensureNotReserved($value);
-
-                return $this->formatName($value);
-            },
+            'name' => fn (): string => text(label: "Enter the name of the settings $type", required: true),
         ];
     }
 
