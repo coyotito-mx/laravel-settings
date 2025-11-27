@@ -85,9 +85,9 @@ class MakeSettingsClassCommand extends Command
     protected function getReplacements(): array
     {
         return [
+            ...parent::getReplacements(),
             '{{class}}' => $this->getClassName(),
             '{{namespace}}' => $this->getNamespace(),
-            '{{group}}' => $this->getGroup(),
         ];
     }
 

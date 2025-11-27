@@ -231,6 +231,13 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
 
     /**
      * Get the replacements and placeholders
+     *
+     * @return array<string, string>
      */
-    abstract protected function getReplacements(): array;
+    protected function getReplacements(): array
+    {
+        return [
+            '{{group}}' => $this->getGroup(),
+        ];
+    }
 }
