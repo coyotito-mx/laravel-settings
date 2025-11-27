@@ -162,13 +162,13 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
     }
 
     /**
-     * Generate file
+     * Generate a file from a stub
      *
-     * @param string $name The name of the file
-     * @param string $to The path to store the file
+     * @param string $basename The name of the file (including the extension)
+     * @param string $destination The destination path where the file will be created
      * @return bool
      */
-    public function generateFile(string $name, string $to): bool
+    public function generateFile(string $basename, string $destination): bool
     {
         $stub = $this->getStubPath(
             $this->resolveStub(static::$type)
@@ -180,11 +180,11 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
             File::get($stub)
         );
 
-        if (File::exists(join_paths($to, $name))) {
+        if (File::exists(join_paths($destination, $basename))) {
             return false;
         }
 
-        return (bool) File::put(join_paths($to, $name), $content);
+        return (bool) File::put(join_paths($destination, $basename), $content);
     }
 
     /**

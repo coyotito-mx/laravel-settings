@@ -53,21 +53,24 @@ class MakeSettingsMigrationCommand extends Command
         return self::SUCCESS;
     }
 
-    public function generateFile(string $name, string $to): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function generateFile(string $basename, string $destination): bool
     {
         $pattern = join_paths(
             database_path('migrations'),
             // Remove the timestamp (Y_m_d_His_) prefix from the migration name
-            '*_'.$this->removeTimestamp($name),
+            '*_'.$this->removeTimestamp($basename),
         );
 
         if (filled(File::glob($pattern))) {
-            $name = Str::replace('.php', '', $this->removeTimestamp($name));
+            $basename = Str::replace('.php', '', $this->removeTimestamp($basename));
 
-            throw new \RuntimeException("Migration [$name] already exists.");
+            throw new \RuntimeException("Migration [$basename] already exists.");
         }
 
-        return parent::generateFile($name, $to);
+        return parent::generateFile($basename, $destination);
     }
 
 
@@ -113,8 +116,11 @@ class MakeSettingsMigrationCommand extends Command
         return Str::of($name)->snake()->toString();
     }
 
-    protected function removeTimestamp(string $name): string
+    /**
+     * Utility to remove the timestamp from a migration name.
+     */
+    protected function removeTimestamp(string $migrationName): string
     {
-        return Str::of($name)->replaceMatches('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '')->toString();
+        return Str::of($migrationName)->replaceMatches('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '')->toString();
     }
 }

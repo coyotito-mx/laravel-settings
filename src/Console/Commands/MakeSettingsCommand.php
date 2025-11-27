@@ -62,22 +62,31 @@ class MakeSettingsCommand extends Command
         return ! $this->option('without-migration');
     }
 
-    protected function generateMigration(): void
+    /**
+     * Generate the Settings migration
+     */
+    protected function generateMigration(): int
     {
-        $this->call(
+        return $this->call(
             command: 'make:settings-migration',
             arguments: ['name' => $this->getMigrationName(), $this->getArgumentsForCommands()],
         );
     }
 
-    protected function generateClass(): void
+    /**
+     * Generate the Settings class
+     */
+    protected function generateClass(): int
     {
-        $this->call(
+        return $this->call(
             command: 'make:settings-class',
             arguments: ['name' => $this->getClassName(), ...$this->getArgumentsForCommands()],
         );
     }
 
+    /**
+     * Get the Settings class name
+     */
     protected function getClassName(): string
     {
         if ($className = $this->argument('class')) {
@@ -87,6 +96,9 @@ class MakeSettingsCommand extends Command
         return $this->option('group') === 'default' ? 'DefaultSettings' : $this->option('group');
     }
 
+    /**
+     * Get the Settings migration name
+     */
     protected function getMigrationName(): string
     {
         if ($migrationName = $this->argument('migration')) {
@@ -98,6 +110,9 @@ class MakeSettingsCommand extends Command
         return "add_settings_to_{$group}_group";
     }
 
+    /**
+     * Get the common arguments for the commands
+     */
     protected function getArgumentsForCommands(): array
     {
         $arguments = [];
