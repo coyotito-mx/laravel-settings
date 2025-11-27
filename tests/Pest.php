@@ -14,7 +14,9 @@
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 
+use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
 uses(Tests\TestCase::class)
@@ -51,27 +53,15 @@ expect()->extend('toBeInDirectory', function (string $directory) {
 });
 
 expect()->extend('toBeClassSettings', function () {
-    $segments = explode('\\', trim($this->value, '\\'));
-    $root = array_shift($segments);
+    $class = class_basename($this->value);
 
-    expect($root)->toBe('App');
+    $directory = psr4_namespace_to_path(Str::before($this->value, "\\{$class}"));
 
-    $class = '\\'.implode('\\', [$root, ...$segments]);
+    expect("$class.php")->toBeInDirectory($directory);
 
-    $file = array_pop($segments).'.php';
-    $filepath = app_path(implode(DIRECTORY_SEPARATOR, [...$segments, $file]));
+    $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
 
-    expect($file)->toBeInDirectory(pathinfo($filepath, PATHINFO_DIRNAME));
-
-    $settingsClass = (function (string $filepath, string $class) {
-        require_once $filepath;
-
-        $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
-
-        return new $class($repo);
-    })($filepath, $class);
-
-    return expect($settingsClass)->toBeInstanceOf(Settings::class);
+    return expect(new $this->value($repo))->toBeInstanceOf(Settings::class);
 });
 
 /*
