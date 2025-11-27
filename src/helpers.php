@@ -39,7 +39,7 @@ namespace Coyotito\LaravelSettings\Helpers
      */
     function psr4_namespace_to_path(string $namespace): ?string
     {
-        static $composer = File::json(base_path('composer.json'));
+        $composer = File::json(base_path('composer.json'));
 
         if (! data_has($composer, 'autoload.psr-4')) {
             return null;
