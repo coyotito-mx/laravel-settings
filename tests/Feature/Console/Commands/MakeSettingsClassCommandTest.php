@@ -3,13 +3,13 @@
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {
-    rmdir_recursive(app_path('Settings'), delete_root: false);
     rmdir_recursive(app_path('Custom'));
+    rmdir_recursive(app_path('Settings'), delete_root: false);
 });
 
 afterEach(function () {
-    rmdir_recursive(app_path('Settings'), delete_root: false);
     rmdir_recursive(app_path('Custom'));
+    rmdir_recursive(app_path('Settings'), delete_root: false);
 });
 
 it('create settings class', function () {
