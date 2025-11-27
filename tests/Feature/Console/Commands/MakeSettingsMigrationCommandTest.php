@@ -82,13 +82,15 @@ it('fails if migration already exists', function () {
 
     expect(File::glob($migration))->not->toBeEmpty();
 
-    expect(fn () =>
+    expect(
+        fn () =>
         artisan('make:settings-migration', ['name' => 'add_settings_for_app'])
     )->toThrow(RuntimeException::class, 'Migration [add_settings_for_app] already exists.');
 });
 
 it('cannot create migration with reserved name', function () {
-    expect(fn () =>
+    expect(
+        fn () =>
         artisan('make:settings-migration', ['name' => 'add_settings_to_class_group'])
     )->toThrow(RuntimeException::class, 'The provided name [class] is reserved.');
 });
