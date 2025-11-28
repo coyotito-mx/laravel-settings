@@ -93,26 +93,18 @@ it('cannot update locked settings', function () {
         ['group' => 'default', 'name' => 'version', 'payload' => json_encode('1.0.0'), 'locked' => false],
     ]);
 
-    try {
+    expect(function () {
         $this->repo->update([
             'name' => 'Coyotito Rocks!',
             'debug' => false,
             'env' => 'production',
             'version' => '1.1.0',
         ]);
-    } catch (LockedSettingException $e) {
-        $lockedSettings = $e->setting;
-    }
-
-    expect($e->getMessage())
-        ->toBe('The settings provided are locked and cannot be modified.')
-        ->and(isset($lockedSettings))
-        ->toBeTrue()
-        ->and($lockedSettings)->toBe(['env', 'name']);
-
-    $settings = (object) $this->repo->getAll();
-
-    expect($settings)
+    })->toThrow(
+        fn (LockedSettingException $e) => expect($e->setting)->toBe(['env', 'name']),
+        'The settings provided are locked and cannot be modified.'
+    )
+        ->and((object) $this->repo->getAll())
         ->name->toBe('Coyotito')
         ->debug->toBeTrue()
         ->env->toBe('local')
@@ -241,19 +233,13 @@ it('fails to delete locked settings', function () {
         ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2), 'locked' => false],
     ]);
 
-    try {
-        $this->repo->delete(['first', 'second']);
-    } catch (LockedSettingException $e) {
-        $lockedSettings = $e->setting;
-    }
-
-    expect($e->getMessage())
-        ->toBe('The setting provided is locked and cannot be modified.')
-        ->and(isset($lockedSettings))
-        ->toBeTrue()
-        ->and($lockedSettings)->toBe(['first']);
-
-    expect(Setting::query()->where('group', 'default')->count())->toBe(2);
+    expect(fn () => $this->repo->delete(['first', 'second']))
+        ->toThrow(
+            fn (LockedSettingException $e) => expect($e->setting)->toBe(['first']),
+            'The setting provided is locked and cannot be modified.'
+        )
+        ->and(Setting::byGroup('default')->count())
+        ->toBe(2);
 });
 
 it('drops all settings for current group only', function () {
