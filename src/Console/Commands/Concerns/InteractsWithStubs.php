@@ -17,7 +17,7 @@ trait InteractsWithStubs
     {
         $group = 'default';
 
-        if ($this->getGroup('group') !== 'default') {
+        if ($this->getGroup() !== 'default') {
             $group = 'group';
         }
 

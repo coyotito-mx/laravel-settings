@@ -106,6 +106,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function getNamespace(): string
     {
+        /** @phpstan-ignore-next-line */
         $rootNamespace = $this->option('namespace') ?? $this->getDefaultNamespace();
 
         $this->ensureNotReserved($rootNamespace);
