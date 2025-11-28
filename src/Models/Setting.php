@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Models;
 
-use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
 use Illuminate\Database\Eloquent\Model;
 
 /**
