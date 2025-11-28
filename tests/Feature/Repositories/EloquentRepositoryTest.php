@@ -1,5 +1,6 @@
 <?php
 
+use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
 use Coyotito\LaravelSettings\Models\Setting;
 use Illuminate\Support\Facades\Schema;
 
@@ -84,6 +85,32 @@ it('update settings', function () {
         ]);
 });
 
+it('cannot update locked settings', function () {
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
+        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+        ['group' => 'default', 'name' => 'env', 'payload' => json_encode('local'), 'locked' => true],
+        ['group' => 'default', 'name' => 'version', 'payload' => json_encode('1.0.0'), 'locked' => false],
+    ]);
+
+    expect(function () {
+        $this->repo->update([
+            'name' => 'Coyotito Rocks!',
+            'debug' => false,
+            'env' => 'production',
+            'version' => '1.1.0',
+        ]);
+    })->toThrow(
+        fn (LockedSettingException $e) => expect($e->setting)->toBe(['env', 'name']),
+        'The settings provided are locked and cannot be modified.'
+    )
+        ->and((object) $this->repo->getAll())
+        ->name->toBe('Coyotito')
+        ->debug->toBeTrue()
+        ->env->toBe('local')
+        ->version->toBe('1.0.0');
+});
+
 test('dynamic properties are not persisted', function () {
     Setting::insert([
         ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
@@ -117,7 +144,7 @@ it('gets a single setting with default when not found', function () {
     $value = $this->repo->get('non_existing', 'fallback');
 
     expect($value)->toBe('fallback')
-        ->and(Setting::query()->where('group', 'default')->count())->toBe(0);
+        ->and(Setting::byGroup('default')->count())->toBe(0);
 });
 
 it('gets multiple settings as associative array', function () {
@@ -191,13 +218,28 @@ it('deletes single and multiple settings and returns affected count', function (
         ['group' => 'default', 'name' => 'third', 'payload' => json_encode(3)],
     ]);
 
-    $deleted = $this->repo->deleTe('first');
+    $deleted = $this->repo->delete('first');
     expect($deleted)->toBe(1);
 
     $deleted = $this->repo->delete(['second', 'missing']);
     expect($deleted)->toBe(1);
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(1);
+    expect(Setting::byGroup('default')->count())->toBe(1);
+});
+
+it('fails to delete locked settings', function () {
+    Setting::insert([
+        ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1), 'locked' => true],
+        ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2), 'locked' => false],
+    ]);
+
+    expect(fn () => $this->repo->delete(['first', 'second']))
+        ->toThrow(
+            fn (LockedSettingException $e) => expect($e->setting)->toBe(['first']),
+            'The setting provided is locked and cannot be modified.'
+        )
+        ->and(Setting::byGroup('default')->count())
+        ->toBe(2);
 });
 
 it('drops all settings for current group only', function () {
@@ -209,8 +251,21 @@ it('drops all settings for current group only', function () {
 
     $this->repo->drop();
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(0)
-        ->and(Setting::query()->where('group', 'other')->count())->toBe(1);
+    expect(Setting::byGroup('default')->count())->toBe(0)
+        ->and(Setting::byGroup('other')->count())->toBe(1);
+});
+
+it('drop settings including locked ones', function () {
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
+        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+        ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other'), 'locked' => true],
+    ]);
+
+    $this->repo->drop();
+
+    expect(Setting::byGroup('default')->count())->toBe(0)
+        ->and(Setting::byGroup('other')->count())->toBe(1);
 });
 
 it('changes group context with setGroup and group', function () {
@@ -238,8 +293,8 @@ it('renames group and moves all settings to the new group', function () {
 
     expect($this->repo->group())->toBe('renamed');
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(0)
-        ->and(Setting::query()->where('group', 'renamed')->count())->toBe(2);
+    expect(Setting::byGroup('default')->count())->toBe(0)
+        ->and(Setting::byGroup('renamed')->count())->toBe(2);
 
     $all = $this->repo->getAll();
 

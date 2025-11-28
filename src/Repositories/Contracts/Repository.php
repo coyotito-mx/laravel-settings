@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Repositories\Contracts;
 
+use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
+
 /**
  *
  * Handles the processing of settings from a group of settings
@@ -24,6 +26,8 @@ interface Repository
 
     /**
      * Update one or more settings
+     *
+     * @throws LockedSettingException if trying to update at least one locked setting
      */
     public function update(string|array $setting, mixed $value = null): void;
 
@@ -36,6 +40,8 @@ interface Repository
      * Delete one or more settings
      *
      * @return int The count of deleted settings
+     *
+     * @throws LockedSettingException if trying to update at least one locked setting
      */
     public function delete(string|array $setting): int;
 

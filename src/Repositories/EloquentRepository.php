@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Repositories;
 
+use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use RuntimeException;
@@ -73,7 +74,12 @@ class EloquentRepository implements Contracts\Repository
 
         $settingNames = array_keys($setting);
 
-        $presentSettings = $this->withGroup()->whereIn('name', $settingNames)->pluck('name');
+        $presentSettings = $this->withGroup()->whereIn('name', $settingNames)->pluck('locked', 'name');
+        $locked = $presentSettings->filter(fn (bool $locked): bool => $locked);
+
+        if ($locked->isNotEmpty()) {
+            throw new LockedSettingException($locked->keys()->all());
+        }
 
         if ($presentSettings->isEmpty()) {
             return;
@@ -81,7 +87,7 @@ class EloquentRepository implements Contracts\Repository
 
         $now = now();
 
-        $data = $presentSettings->map(function (string $name) use ($setting, $now): array {
+        $data = $presentSettings->keys()->map(function (string $name) use ($setting, $now): array {
             return [
                 'name' => $name,
                 'group' => $this->group(),
@@ -128,6 +134,12 @@ class EloquentRepository implements Contracts\Repository
 
         if (empty($setting)) {
             return 0;
+        }
+
+        $locked = $this->withGroup()->where('locked', true)->whereIn('name', $setting)->pluck('name');
+
+        if ($locked->isNotEmpty()) {
+            throw new LockedSettingException($locked->all());
         }
 
         return (int) $this->withGroup()->whereIn('name', $setting)->delete();
