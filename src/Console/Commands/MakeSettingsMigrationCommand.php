@@ -60,7 +60,6 @@ class MakeSettingsMigrationCommand extends Command
     {
         $pattern = join_paths(
             database_path('migrations'),
-            // Remove the timestamp (Y_m_d_His_) prefix from the migration name
             '*_'.$this->removeTimestamp($basename),
         );
 
