@@ -13,7 +13,7 @@ afterEach(function () {
 });
 
 it('register settings', function () {
-    artisan('make:settings', ['--without-migration' => true, '--class-name' => 'LocalSettings'])->assertSuccessful();
+    artisan('make:settings', ['class' => 'LocalSettings', '--without-migration' => true])->assertSuccessful();
     artisan('vendor:publish', ['--tag' => 'laravel-settings-migrations']);
 
     $this->refreshApplication();

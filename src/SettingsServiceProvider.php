@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
-use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigration;
+use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
+use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
+use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
@@ -66,7 +68,9 @@ class SettingsServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                MakeSettingsMigration::class,
+                MakeSettingsCommand::class,
+                MakeSettingsClassCommand::class,
+                MakeSettingsMigrationCommand::class,
             ]);
         }
 
