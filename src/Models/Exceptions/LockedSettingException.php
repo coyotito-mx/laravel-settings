@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Models\Exceptions;
 
+use Illuminate\Support\Pluralizer;
+
 /**
  * Exception to express when a setting in Locked and cannot be updated or deleted
  */
@@ -11,14 +13,18 @@ class LockedSettingException extends \Exception
 {
     public function __construct(protected(set) string|array $setting)
     {
-        $word = 'setting';
-        $plural = 'is';
+        $settings = is_array($setting) ? $setting : [$setting];
+        $settingsCount = count($settings);
 
-        if (is_array($setting) && count($setting) > 1) {
-            $word = 'settings';
-            $plural = 'are';
-        }
+        $settingWord = Pluralizer::plural('setting', $settingsCount);
+        $toBe = $settingsCount > 1 ? 'are' : 'is';
 
-        parent::__construct("The $word provided $plural locked and cannot be modified.");
+        parent::__construct(
+            sprintf(
+                'The %s provided %s locked and cannot be modified.',
+                $settingWord,
+                $toBe
+            )
+        );
     }
 }

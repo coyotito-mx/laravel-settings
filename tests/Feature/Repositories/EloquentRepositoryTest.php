@@ -89,26 +89,34 @@ it('cannot update locked settings', function () {
     Setting::insert([
         ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
         ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+        ['group' => 'default', 'name' => 'env', 'payload' => json_encode('local'), 'locked' => true],
+        ['group' => 'default', 'name' => 'version', 'payload' => json_encode('1.0.0'), 'locked' => false],
     ]);
 
     try {
         $this->repo->update([
             'name' => 'Coyotito Rocks!',
             'debug' => false,
+            'env' => 'production',
+            'version' => '1.1.0',
         ]);
     } catch (LockedSettingException $e) {
         $lockedSettings = $e->setting;
     }
 
-    expect(isset($lockedSettings))
+    expect($e->getMessage())
+        ->toBe('The settings provided are locked and cannot be modified.')
+        ->and(isset($lockedSettings))
         ->toBeTrue()
-        ->and($lockedSettings)->toBe(['name']);
+        ->and($lockedSettings)->toBe(['env', 'name']);
 
     $settings = (object) $this->repo->getAll();
 
     expect($settings)
         ->name->toBe('Coyotito')
-        ->debug->toBeTrue();
+        ->debug->toBeTrue()
+        ->env->toBe('local')
+        ->version->toBe('1.0.0');
 });
 
 test('dynamic properties are not persisted', function () {
@@ -239,7 +247,9 @@ it('fails to delete locked settings', function () {
         $lockedSettings = $e->setting;
     }
 
-    expect(isset($lockedSettings))
+    expect($e->getMessage())
+        ->toBe('The setting provided is locked and cannot be modified.')
+        ->and(isset($lockedSettings))
         ->toBeTrue()
         ->and($lockedSettings)->toBe(['first']);
 
