@@ -145,10 +145,10 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
      *
      * @throws InvalidArgumentException if the provided name is reserved
      */
-    protected function ensureNotReserved(string $name): void
+    protected function ensureNotReserved(string $name, string $type): void
     {
         if (in_array($name, $this->reservedNames)) {
-            throw new InvalidArgumentException("The provided name [$name] is reserved.");
+            throw new InvalidArgumentException("The provided $type [$name] is reserved.");
         }
     }
 
@@ -196,7 +196,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
         return with(
             $this->argument('name'),
             function (string $className): string {
-                $this->ensureNotReserved($className);
+                $this->ensureNotReserved($className, 'name');
 
                 return $this->formatName($className);
             }
@@ -213,7 +213,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
         $group = $this->option('group');
 
         if ($group !== 'default') {
-            $this->ensureNotReserved($group);
+            $this->ensureNotReserved($group, 'group');
         }
 
         return Str::of($group)->snake()->slug()->toString();

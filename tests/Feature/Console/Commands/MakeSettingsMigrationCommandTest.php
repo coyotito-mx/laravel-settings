@@ -92,5 +92,5 @@ it('cannot create migration with reserved name', function () {
     expect(
         fn () =>
         artisan('make:settings-migration', ['name' => 'add_settings_to_class_group'])
-    )->toThrow(RuntimeException::class, 'The provided name [class] is reserved.');
+    )->toThrow(InvalidArgumentException::class, 'The provided group [class] is reserved.');
 });

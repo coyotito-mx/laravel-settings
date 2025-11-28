@@ -79,5 +79,5 @@ it('cannot create class with reserved name', function () {
     expect(
         fn () =>
         artisan('make:settings-class', ['name' => 'Settings'])
-    )->toThrow(RuntimeException::class, 'The provided name [Settings] is reserved.');
+    )->toThrow(InvalidArgumentException::class, 'The provided name [Settings] is reserved.');
 });

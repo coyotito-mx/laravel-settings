@@ -97,7 +97,7 @@ class MakeSettingsMigrationCommand extends Command
     {
         $this->group = Str::of($group)->slug()->toString();
 
-        $this->ensureNotReserved($this->group);
+        $this->ensureNotReserved($this->group, 'group');
     }
 
     /**
