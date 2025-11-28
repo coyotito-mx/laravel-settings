@@ -8,6 +8,7 @@ use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionUnionType;
+use RuntimeException;
 
 /**
  * Abstract base class for application settings with automatic persistence.
@@ -92,7 +93,7 @@ abstract class Settings
             if ($method->isStatic()) {
                 $this->repository->setGroup($method->invoke(null));
             } else {
-                throw new \RuntimeException('The group method must be static.');
+                throw new RuntimeException('The group method must be static.');
             }
         } catch (\ReflectionException) {
             // If method `Repository::group` does not exists, we use the default group
