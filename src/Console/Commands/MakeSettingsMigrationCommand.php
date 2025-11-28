@@ -7,6 +7,7 @@ namespace Coyotito\LaravelSettings\Console\Commands;
 use Coyotito\LaravelSettings\Console\Commands\GeneratorCommand as Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 use function Illuminate\Filesystem\join_paths;
 
@@ -66,7 +67,7 @@ class MakeSettingsMigrationCommand extends Command
         if (filled(File::glob($pattern))) {
             $basename = Str::replace('.php', '', $this->removeTimestamp($basename));
 
-            throw new \RuntimeException("Migration [$basename] already exists.");
+            throw new RuntimeException("Migration [$basename] already exists.");
         }
 
         return parent::generateFile($basename, $destination);
