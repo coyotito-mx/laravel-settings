@@ -144,7 +144,7 @@ it('gets a single setting with default when not found', function () {
     $value = $this->repo->get('non_existing', 'fallback');
 
     expect($value)->toBe('fallback')
-        ->and(Setting::query()->where('group', 'default')->count())->toBe(0);
+        ->and(Setting::byGroup('default')->count())->toBe(0);
 });
 
 it('gets multiple settings as associative array', function () {
@@ -218,13 +218,13 @@ it('deletes single and multiple settings and returns affected count', function (
         ['group' => 'default', 'name' => 'third', 'payload' => json_encode(3)],
     ]);
 
-    $deleted = $this->repo->deleTe('first');
+    $deleted = $this->repo->delete('first');
     expect($deleted)->toBe(1);
 
     $deleted = $this->repo->delete(['second', 'missing']);
     expect($deleted)->toBe(1);
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(1);
+    expect(Setting::byGroup('default')->count())->toBe(1);
 });
 
 it('fails to delete locked settings', function () {
@@ -251,8 +251,8 @@ it('drops all settings for current group only', function () {
 
     $this->repo->drop();
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(0)
-        ->and(Setting::query()->where('group', 'other')->count())->toBe(1);
+    expect(Setting::byGroup('default')->count())->toBe(0)
+        ->and(Setting::byGroup('other')->count())->toBe(1);
 });
 
 it('drop settings including locked ones', function () {
@@ -264,8 +264,8 @@ it('drop settings including locked ones', function () {
 
     $this->repo->drop();
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(0)
-        ->and(Setting::query()->where('group', 'other')->count())->toBe(1);
+    expect(Setting::byGroup('default')->count())->toBe(0)
+        ->and(Setting::byGroup('other')->count())->toBe(1);
 });
 
 it('changes group context with setGroup and group', function () {
@@ -293,8 +293,8 @@ it('renames group and moves all settings to the new group', function () {
 
     expect($this->repo->group())->toBe('renamed');
 
-    expect(Setting::query()->where('group', 'default')->count())->toBe(0)
-        ->and(Setting::query()->where('group', 'renamed')->count())->toBe(2);
+    expect(Setting::byGroup('default')->count())->toBe(0)
+        ->and(Setting::byGroup('renamed')->count())->toBe(2);
 
     $all = $this->repo->getAll();
 
