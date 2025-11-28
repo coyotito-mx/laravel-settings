@@ -75,8 +75,9 @@ class EloquentRepository implements Contracts\Repository
         $settingNames = array_keys($setting);
 
         $presentSettings = $this->withGroup()->whereIn('name', $settingNames)->pluck('locked', 'name');
+        $locked = $presentSettings->filter(fn (bool $locked): bool => $locked);
 
-        if (($locked = $presentSettings->filter(fn (bool $locked): bool => $locked))->isNotEmpty()) {
+        if ($locked->isNotEmpty()) {
             throw new LockedSettingException($locked->keys()->all());
         }
 
