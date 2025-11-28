@@ -15,6 +15,7 @@ use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
@@ -89,14 +90,14 @@ function rmdir_recursive(string $directory, bool $delete_root = true): bool
     }
 
     if (! is_dir($directory)) {
-        throw new \RuntimeException('The provided path is not a directory');
+        throw new RuntimeException('The provided path is not a directory');
     }
 
     $walk = static function (string $root, bool $delete_root) use (&$walk): bool {
         $files = scandir($root);
 
         if ($files === false) {
-            throw new \RuntimeException("Unable to read directory: {$root}");
+            throw new RuntimeException("Unable to read directory: {$root}");
         }
 
         foreach ($files as $file) {
@@ -113,7 +114,7 @@ function rmdir_recursive(string $directory, bool $delete_root = true): bool
             }
 
             if (! unlink($filepath)) {
-                throw new \RuntimeException("Unable to delete file: {$filepath}");
+                throw new RuntimeException("Unable to delete file: {$filepath}");
             }
         }
 
