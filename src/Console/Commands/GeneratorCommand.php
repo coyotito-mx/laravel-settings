@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use RuntimeException;
+use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -143,12 +143,12 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
     /**
      * Check if the given name is a reserved name
      *
-     * @throws RuntimeException if the provided name is reserved
+     * @throws InvalidArgumentException if the provided name is reserved
      */
     protected function ensureNotReserved(string $name): void
     {
         if (in_array($name, $this->reservedNames)) {
-            throw new RuntimeException("The provided name [$name] is reserved.");
+            throw new InvalidArgumentException("The provided name [$name] is reserved.");
         }
     }
 
