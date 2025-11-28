@@ -94,7 +94,7 @@ class MakeSettingsClassCommand extends Command
     }
 
     /**
-     * Get the settings group name.
+     * Get the settings class name.
      */
     protected function getClassName(): string
     {
