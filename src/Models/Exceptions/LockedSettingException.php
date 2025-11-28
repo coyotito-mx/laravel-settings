@@ -9,8 +9,16 @@ namespace Coyotito\LaravelSettings\Models\Exceptions;
  */
 class LockedSettingException extends \Exception
 {
-    public function __construct(string $settingName)
+    public function __construct(protected(set) string|array $setting)
     {
-        parent::__construct("Setting `$settingName` is locked and cannot be updated/deleted.");
+        $word = 'setting';
+        $plural = 'is';
+
+        if (is_array($setting) && count($setting) > 1) {
+            $word = 'settings';
+            $plural = 'are';
+        }
+
+        parent::__construct("The $word provided $plural locked and cannot be modified.");
     }
 }

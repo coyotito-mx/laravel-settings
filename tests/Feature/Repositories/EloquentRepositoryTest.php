@@ -1,5 +1,6 @@
 <?php
 
+use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
 use Coyotito\LaravelSettings\Models\Setting;
 use Illuminate\Support\Facades\Schema;
 
@@ -82,6 +83,32 @@ it('update settings', function () {
             'name' => 'Coyotito Rocks!',
             'description' => 'Lorem ipsum dolor it',
         ]);
+});
+
+it('cannot update locked settings', function () {
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
+        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+    ]);
+
+    try {
+        $this->repo->update([
+            'name' => 'Coyotito Rocks!',
+            'debug' => false,
+        ]);
+    } catch (LockedSettingException $e) {
+        $lockedSettings = $e->setting;
+    }
+
+    expect(isset($lockedSettings))
+        ->toBeTrue()
+        ->and($lockedSettings)->toBe(['name']);
+
+    $settings = (object) $this->repo->getAll();
+
+    expect($settings)
+        ->name->toBe('Coyotito')
+        ->debug->toBeTrue();
 });
 
 test('dynamic properties are not persisted', function () {
@@ -200,11 +227,43 @@ it('deletes single and multiple settings and returns affected count', function (
     expect(Setting::query()->where('group', 'default')->count())->toBe(1);
 });
 
+it('fails to delete locked settings', function () {
+    Setting::insert([
+        ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1), 'locked' => true],
+        ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2), 'locked' => false],
+    ]);
+
+    try {
+        $this->repo->delete(['first', 'second']);
+    } catch (LockedSettingException $e) {
+        $lockedSettings = $e->setting;
+    }
+
+    expect(isset($lockedSettings))
+        ->toBeTrue()
+        ->and($lockedSettings)->toBe(['first']);
+
+    expect(Setting::query()->where('group', 'default')->count())->toBe(2);
+});
+
 it('drops all settings for current group only', function () {
     Setting::insert([
         ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
         ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
         ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other')],
+    ]);
+
+    $this->repo->drop();
+
+    expect(Setting::query()->where('group', 'default')->count())->toBe(0)
+        ->and(Setting::query()->where('group', 'other')->count())->toBe(1);
+});
+
+it('drop settings including locked ones', function () {
+    Setting::insert([
+        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
+        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+        ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other'), 'locked' => true],
     ]);
 
     $this->repo->drop();
