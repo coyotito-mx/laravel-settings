@@ -3,6 +3,7 @@
 namespace Coyotito\LaravelSettings\Helpers
 {
 
+    use Coyotito\LaravelSettings\SettingsManager;
     use Illuminate\Support\Facades\File;
     use Illuminate\Support\Str;
 
@@ -60,5 +61,33 @@ namespace Coyotito\LaravelSettings\Helpers
         }
 
         return null;
+    }
+
+    /**
+     * Get / set settings values
+     *
+     * @return ($setting is null ? SettingsManager : ($setting is string ? ($default is array ? SettingsManager : mixed) : array))
+     */
+    function settings(null|string|array $setting = null, mixed $default = null)
+    {
+        $instance = new SettingsManager;
+
+        if ($setting === null) {
+            return $instance;
+        }
+
+        if (is_string($setting)) {
+            if (func_num_args() > 1 && is_array($default)) {
+                return $instance->group($setting)->set($default);
+            }
+
+            return $instance->get($setting, $default);
+        }
+
+        if (array_is_list($setting)) {
+            return $instance->get($setting);
+        }
+
+        return $instance->set($setting);
     }
 }
