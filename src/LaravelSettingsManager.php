@@ -13,8 +13,17 @@ class LaravelSettingsManager
 {
     protected array $settingsFolders = [];
 
-    public function addNamespace(string $namespace, string $path)
+    /**
+     * Add a namespace and its corresponding path for Setting classes.
+     */
+    public function addNamespace(string $namespace, ?string $path = null): void
     {
+        $path = $path ?? psr4_namespace_to_path($namespace);
+
+        if (blank($path)) {
+            throw new \InvalidArgumentException("Could not resolve path for namespace: $namespace");
+        }
+
         $this->settingsFolders[trim($namespace, '\\')] = $path;
     }
 

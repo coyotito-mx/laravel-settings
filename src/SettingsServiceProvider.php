@@ -50,10 +50,7 @@ class SettingsServiceProvider extends ServiceProvider
 
         $rootNamespace = trim($this->app->getNamespace(), '\\');
 
-        LaravelSettings::addNamespace(
-            "$rootNamespace\\Settings",
-            app_path('Settings'),
-        );
+        LaravelSettings::addNamespace("$rootNamespace\\Settings");
     }
 
     public function boot(): void
