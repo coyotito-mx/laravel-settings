@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
+use Coyotito\LaravelSettings\Facades\LaravelSettings;
+use Coyotito\LaravelSettings\Models\Setting;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Arr;
 
+use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
 class LaravelSettingsManager
@@ -27,6 +30,11 @@ class LaravelSettingsManager
         $this->settingsFolders[trim($namespace, '\\')] = $path;
     }
 
+    /**
+     * Get the list of Setting classes.
+     *
+     * @return class-string<Setting>[]
+     */
     public function getClasses(): array
     {
         $classes = [];
@@ -34,7 +42,7 @@ class LaravelSettingsManager
         foreach (array_keys($this->settingsFolders) as $namespace) {
             $resolvedClasses = $this->resolveNamespaceClasses($namespace);
 
-            if (is_null($resolvedClasses)) {
+            if (blank($resolvedClasses)) {
                 continue;
             }
 
@@ -44,6 +52,11 @@ class LaravelSettingsManager
         return $classes;
     }
 
+    /**
+     * Resolve the Setting classes in a given namespace.
+     *
+     * @return ?class-string<Setting>[]
+     */
     protected function resolveNamespaceClasses(string $namespace): ?array
     {
         $directory = $this->settingsFolders[$namespace];

@@ -88,11 +88,6 @@ class SettingsServiceProvider extends ServiceProvider
 
         foreach ($classes as $class) {
             $this->app->scoped($class, function () use ($class) {
-                /**
-                 * @var Settings $class
-                 * @var Repository $repository
-                 * */
-
                 $repository = $this->app->make('settings.repository');
 
                 return new $class($repository);
