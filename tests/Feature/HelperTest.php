@@ -1,7 +1,6 @@
 <?php
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use Mockery\LegacyMockInterface;
 use Orchestra\Testbench;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
@@ -64,7 +63,7 @@ it('returns null for non-matching namespace', function () {
 
 describe('settings helper', function () {
     beforeEach(function () {
-        app()->bind(Repository::class, function (){
+        app()->bind(Repository::class, function () {
             $mock = $this->mock(Repository::class)->makePartial();
 
             $mock->shouldReceive('setGroup')

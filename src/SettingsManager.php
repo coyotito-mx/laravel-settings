@@ -39,7 +39,7 @@ final class SettingsManager
 
     public function group(string $group): self
     {
-        return tap(new self, fn (self $manager) => $manager->setGroup($group));
+        return tap(new self(), fn (self $manager) => $manager->setGroup($group));
     }
 
     protected function setGroup(string $group): void

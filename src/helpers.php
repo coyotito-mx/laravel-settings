@@ -70,7 +70,7 @@ namespace Coyotito\LaravelSettings\Helpers
      */
     function settings(null|string|array $setting = null, mixed $default = null)
     {
-        $instance = new SettingsManager;
+        $instance = new SettingsManager();
 
         if ($setting === null) {
             return $instance;
