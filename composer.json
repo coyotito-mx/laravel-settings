@@ -49,6 +49,8 @@
             "@lint",
             "@style:test"
         ],
+        "rector:dry": "@php vendor/bin/rector --ansi --dry-run",
+        "rector:fix": "@php vendor/bin/rector --ansi",
         "post-autoload-dump": [
             "@clear",
             "@prepare"
