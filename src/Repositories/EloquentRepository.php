@@ -128,6 +128,41 @@ class EloquentRepository implements Contracts\Repository
         $this->query()->insert($data);
     }
 
+    public function upsert(string|array $setting, mixed $value = null): void
+    {
+        if (func_num_args() === 2 || is_string($setting)) {
+            $setting = [
+                $setting => $value
+            ];
+        }
+
+        if (empty($setting)) {
+            return;
+        }
+
+        $now = now();
+
+        $data = collect($setting)
+            ->map(function (mixed $insert, int|string $name) use ($now, $value): array {
+                if (is_int($name)) {
+                    [$insert, $name] = [$name, $insert];
+                }
+
+                return [
+                    'name' => $name,
+                    'group' => $this->group(),
+                    'payload' => is_int($name) ? $value : $this->castValue($insert ?? null),
+                    'updated_at' => $now,
+                    'created_at' => $now,
+                ];
+            })->toArray();
+
+        $this->query()->upsert($data, ['group', 'name'], ['payload', 'updated_at']);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function delete(string|array $setting): int
     {
         $setting = Arr::wrap($setting);

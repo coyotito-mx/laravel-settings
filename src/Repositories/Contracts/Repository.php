@@ -37,6 +37,11 @@ interface Repository
     public function insert(string|array $setting, mixed $value = null): void;
 
     /**
+     * Insert or update one or more settings
+     */
+    public function upsert(string|array $setting, mixed $value = null): void;
+
+    /**
      * Delete one or more settings
      *
      * @return int The count of deleted settings

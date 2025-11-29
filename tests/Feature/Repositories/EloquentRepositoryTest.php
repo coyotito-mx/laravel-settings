@@ -211,6 +211,33 @@ it('updates existing settings', function () {
         ->debug->toBeFalse();
 });
 
+it('upserts single and multiple settings', function () {
+    tap($this->repo)
+        ->upsert('name', 'Coyotito')
+        ->upsert([
+            'debug' => true,
+            'env' => 'local',
+        ]);
+
+    expect((object) $this->repo->getAll())
+        ->name->toBe('Coyotito')
+        ->debug->toBeTrue()
+        ->env->toBe('local');
+
+    tap($this->repo)
+        ->upsert('name', 'Coyotito Rocks!')
+        ->upsert([
+            'debug' => false,
+            'version' => '1.0.0',
+        ]);
+
+    expect((object) $this->repo->getAll())
+        ->name->toBe('Coyotito Rocks!')
+        ->debug->toBeFalse()
+        ->env->toBe('local')
+        ->version->toBe('1.0.0');
+});
+
 it('deletes single and multiple settings and returns affected count', function () {
     Setting::insert([
         ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1)],
