@@ -32,7 +32,7 @@ abstract class Settings
      */
     private array $cachedPublicPropertyNames = [];
 
-    public const DEFAULT_GROUP = 'default';
+    public const string DEFAULT_GROUP = 'default';
 
     public function __construct(protected Repository $repository)
     {
