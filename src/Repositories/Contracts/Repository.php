@@ -16,11 +16,15 @@ interface Repository
 {
     /**
      * Get one or more settings
+     *
+     * @return ($settings is string ? mixed : array<string, mixed>)
      */
-    public function get(string|array $setting, mixed $default = null): mixed;
+    public function get(string|array $settings, mixed $default = null): mixed;
 
     /**
      * Get all the settings
+     *
+     * @return array<string, mixed>
      */
     public function getAll(): array;
 

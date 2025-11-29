@@ -23,19 +23,24 @@ class EloquentRepository implements Contracts\Repository
         //
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function get(string|array $setting, mixed $default = null): mixed
     {
         if (func_num_args() === 2 || is_string($setting)) {
-            $setting = [
+            $settings = [
                 $setting => $default
             ];
+        } else {
+            $settings = $setting;
         }
 
-        $isList = array_is_list($setting);
-        $settingsNames = $isList ? $setting : array_keys($setting);
+        $isList = array_is_list($settings);
+        $settingsNames = $isList ? $settings : array_keys($settings);
         $existingSettings = $this->withGroup()->whereIn('name', $settingsNames)->get(['name', 'payload']);
 
-        $collection = collect($setting)
+        $collection = collect($settings)
             ->mapWithKeys(function (mixed $value, int|string $name) use ($existingSettings, $default): array {
                 if (is_int($name)) {
                     [$value, $name] = [$name, $value];
@@ -48,18 +53,24 @@ class EloquentRepository implements Contracts\Repository
                 ];
             });
 
-        if ($collection->count() === 1) {
+        if (is_string($setting)) {
             return $collection->first();
         }
 
         return $collection->all();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getAll(): array
     {
         return $this->withGroup()->get(['name', 'payload'])->pluck('payload', 'name')->toArray();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function update(string|array $setting, mixed $value = null): void
     {
         if (func_num_args() === 2 || is_string($setting)) {
@@ -99,6 +110,9 @@ class EloquentRepository implements Contracts\Repository
         $this->query()->upsert($data, ['group', 'name'], ['payload', 'updated_at']);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function insert(string|array $setting, mixed $value = null): void
     {
         if (func_num_args() === 2 || is_string($setting)) {
@@ -180,11 +194,17 @@ class EloquentRepository implements Contracts\Repository
         return (int) $this->withGroup()->whereIn('name', $setting)->delete();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function drop(): void
     {
         $this->withGroup()->delete();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function group(): string
     {
         if (! filled($this->group)) {
@@ -194,11 +214,17 @@ class EloquentRepository implements Contracts\Repository
         return $this->group;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setGroup(string $group): void
     {
         $this->group = $group;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function renameGroup(string $newGroup): void
     {
         if ($this->withGroup()->update(['group' => $newGroup])) {
