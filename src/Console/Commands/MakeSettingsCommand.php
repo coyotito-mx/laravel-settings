@@ -20,6 +20,7 @@ class MakeSettingsCommand extends Command
                             { class? : The name of the settings class }
                             { migration? : The name of the settings migration }
                             { --g|group=default : The name of the group }
+                            { --namespace= : The namespace of the settings class }
                             { --without-class : Without the class settings }
                             { --without-migration : Without migration settings }';
 
@@ -69,7 +70,7 @@ class MakeSettingsCommand extends Command
     {
         return $this->call(
             command: 'make:settings-migration',
-            arguments: ['name' => $this->getMigrationName(), $this->getArgumentsForCommands()],
+            arguments: $this->getMigrationGenerationArguments(),
         );
     }
 
@@ -80,7 +81,7 @@ class MakeSettingsCommand extends Command
     {
         return $this->call(
             command: 'make:settings-class',
-            arguments: ['name' => $this->getClassName(), ...$this->getArgumentsForCommands()],
+            arguments: $this->getClassGenerationArguments(),
         );
     }
 
@@ -120,6 +121,28 @@ class MakeSettingsCommand extends Command
         if ($this->option('group')) {
             $arguments['--group'] = $this->option('group');
         }
+
+        return $arguments;
+    }
+
+    protected function getClassGenerationArguments(): array
+    {
+        $arguments = $this->getArgumentsForCommands();
+
+        $arguments['name'] = $this->getClassName();
+
+        if ($this->option('namespace')) {
+            $arguments['--namespace'] = $this->option('namespace');
+        }
+
+        return $arguments;
+    }
+
+    protected function getMigrationGenerationArguments(): array
+    {
+        $arguments = $this->getArgumentsForCommands();
+
+        $arguments['name'] = $this->getMigrationName();
 
         return $arguments;
     }

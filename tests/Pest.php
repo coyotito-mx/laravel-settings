@@ -15,7 +15,6 @@ use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
@@ -58,7 +57,9 @@ expect()->extend('toBeClassSettings', function () {
 
     $directory = psr4_namespace_to_path(Str::before($this->value, "\\{$class}"));
 
-    expect("$class.php")->toBeInDirectory($directory);
+    expect($directory)
+        ->not->toBeEmpty('The provided class namespace is invalid.')
+        ->and("$class.php")->toBeInDirectory($directory);
 
     $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
 

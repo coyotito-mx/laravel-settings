@@ -6,11 +6,13 @@ use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {
+    rmdir_recursive(app_path('Custom'));
     rmdir_recursive(app_path('Settings'));
     rmdir_recursive(database_path('migrations'), delete_root: false);
 });
 
 afterEach(function () {
+    rmdir_recursive(app_path('Custom'));
     rmdir_recursive(app_path('Settings'));
     rmdir_recursive(database_path('migrations'), delete_root: false);
 });
@@ -56,6 +58,18 @@ it('can create settings class with different name', function () {
         ->toBeFile()
         ->and($migrationFile)
         ->toBeFile();
+});
+
+it('create setting class in specified namespace', function () {
+    expect('App\\Custom\\Settings\\DefaultSettings')
+        ->not->toBeClassSettings();
+
+    artisan('make:settings', ['--namespace' => 'App\\Custom\\Settings', '--without-migration' => true])
+        ->expectsOutputToContain("Settings class [DefaultSettings] created successfully.")
+        ->assertSuccessful();
+
+    expect('App\\Custom\\Settings\\DefaultSettings')
+        ->toBeClassSettings();
 });
 
 it('only generates the migration file', function () {
