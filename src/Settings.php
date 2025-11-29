@@ -38,6 +38,8 @@ abstract class Settings
      */
     private array $cachedPublicPropertyNames = [];
 
+    public const DEFAULT_GROUP = 'default';
+
     public function __construct(protected Repository $repository)
     {
         $this->setupGroup();
@@ -97,7 +99,7 @@ abstract class Settings
             }
         } catch (\ReflectionException) {
             // If method `Repository::group` does not exists, we use the default group
-            $this->repository->setGroup('default');
+            $this->repository->setGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
         }
     }
 

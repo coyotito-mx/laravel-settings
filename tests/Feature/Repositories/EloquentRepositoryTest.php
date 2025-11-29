@@ -13,7 +13,7 @@ beforeEach(function () {
 
     /** @var \Coyotito\LaravelSettings\Repositories\Contracts\Repository $repo */
     $repo = app()->make('settings.repository');
-    $repo->setGroup('default');
+    $repo->setGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
 
     artisan('vendor:publish --tag=laravel-settings-migrations');
     artisan('migrate');
@@ -35,8 +35,8 @@ it('has seeded settings', function () {
     $table = (new Setting())->getTable();
 
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     assertDatabaseCount($table, 2);
@@ -50,8 +50,8 @@ it('has seeded settings', function () {
 
 it('can fill properties', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'description', 'payload' => json_encode('Lorem ipsum dolor it')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'description', 'payload' => json_encode('Lorem ipsum dolor it')],
     ]);
 
     $settings = (object) $this->repo->get(['name', 'description']);
@@ -63,8 +63,8 @@ it('can fill properties', function () {
 
 it('update settings', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
-        ['group' => 'default', 'name' => 'config', 'payload' => json_encode(['name' => 'Coyotito', 'description' => 'Lorem ipsum dolor it'])],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'config', 'payload' => json_encode(['name' => 'Coyotito', 'description' => 'Lorem ipsum dolor it'])],
     ]);
 
     $this->repo->update([
@@ -87,10 +87,10 @@ it('update settings', function () {
 
 it('cannot update locked settings', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
-        ['group' => 'default', 'name' => 'env', 'payload' => json_encode('local'), 'locked' => true],
-        ['group' => 'default', 'name' => 'version', 'payload' => json_encode('1.0.0'), 'locked' => false],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'env', 'payload' => json_encode('local'), 'locked' => true],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'version', 'payload' => json_encode('1.0.0'), 'locked' => false],
     ]);
 
     expect(function () {
@@ -113,7 +113,7 @@ it('cannot update locked settings', function () {
 
 test('dynamic properties are not persisted', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
     ]);
 
     // Local "dynamic" data not managed by the repository
@@ -144,13 +144,13 @@ it('gets a single setting with default when not found', function () {
     $value = $this->repo->get('non_existing', 'fallback');
 
     expect($value)->toBe('fallback')
-        ->and(Setting::byGroup('default')->count())->toBe(0);
+        ->and(Setting::byGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)->count())->toBe(0);
 });
 
 it('gets multiple settings as associative array', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     $settings = $this->repo->get(['name', 'debug']);
@@ -175,19 +175,19 @@ it('inserts single and multiple settings', function () {
     assertDatabaseCount($table, 3);
 
     assertDatabaseHas($table, [
-        'group' => 'default',
+        'group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP,
         'name' => 'name',
         'payload' => json_encode('Coyotito'),
     ]);
 
     assertDatabaseHas($table, [
-        'group' => 'default',
+        'group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP,
         'name' => 'debug',
         'payload' => json_encode(true),
     ]);
 
     assertDatabaseHas($table, [
-        'group' => 'default',
+        'group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP,
         'name' => 'env',
         'payload' => json_encode('local'),
     ]);
@@ -195,8 +195,8 @@ it('inserts single and multiple settings', function () {
 
 it('updates existing settings', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     $this->repo->update('name', 'Coyotito Rocks!');
@@ -240,9 +240,9 @@ it('upserts single and multiple settings', function () {
 
 it('deletes single and multiple settings and returns affected count', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1)],
-        ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2)],
-        ['group' => 'default', 'name' => 'third', 'payload' => json_encode(3)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'first', 'payload' => json_encode(1)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'second', 'payload' => json_encode(2)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'third', 'payload' => json_encode(3)],
     ]);
 
     $deleted = $this->repo->delete('first');
@@ -251,13 +251,13 @@ it('deletes single and multiple settings and returns affected count', function (
     $deleted = $this->repo->delete(['second', 'missing']);
     expect($deleted)->toBe(1);
 
-    expect(Setting::byGroup('default')->count())->toBe(1);
+    expect(Setting::byGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)->count())->toBe(1);
 });
 
 it('fails to delete locked settings', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1), 'locked' => true],
-        ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2), 'locked' => false],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'first', 'payload' => json_encode(1), 'locked' => true],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'second', 'payload' => json_encode(2), 'locked' => false],
     ]);
 
     expect(fn () => $this->repo->delete(['first', 'second']))
@@ -265,43 +265,43 @@ it('fails to delete locked settings', function () {
             fn (LockedSettingException $e) => expect($e->setting)->toBe(['first']),
             'The setting provided is locked and cannot be modified.'
         )
-        ->and(Setting::byGroup('default')->count())
+        ->and(Setting::byGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)->count())
         ->toBe(2);
 });
 
 it('drops all settings for current group only', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
         ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other')],
     ]);
 
     $this->repo->drop();
 
-    expect(Setting::byGroup('default')->count())->toBe(0)
+    expect(Setting::byGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)->count())->toBe(0)
         ->and(Setting::byGroup('other')->count())->toBe(1);
 });
 
 it('drop settings including locked ones', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
         ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other'), 'locked' => true],
     ]);
 
     $this->repo->drop();
 
-    expect(Setting::byGroup('default')->count())->toBe(0)
+    expect(Setting::byGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)->count())->toBe(0)
         ->and(Setting::byGroup('other')->count())->toBe(1);
 });
 
 it('changes group context with setGroup and group', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Default')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Default')],
         ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other')],
     ]);
 
-    expect($this->repo->group())->toBe('default');
+    expect($this->repo->group())->toBe(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
     expect($this->repo->get('name'))->toBe('Default');
 
     $this->repo->setGroup('other');
@@ -312,15 +312,15 @@ it('changes group context with setGroup and group', function () {
 
 it('renames group and moves all settings to the new group', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     $this->repo->renameGroup('renamed');
 
     expect($this->repo->group())->toBe('renamed');
 
-    expect(Setting::byGroup('default')->count())->toBe(0)
+    expect(Setting::byGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)->count())->toBe(0)
         ->and(Setting::byGroup('renamed')->count())->toBe(2);
 
     $all = $this->repo->getAll();

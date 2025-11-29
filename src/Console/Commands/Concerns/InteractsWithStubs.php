@@ -15,9 +15,9 @@ trait InteractsWithStubs
      */
     protected function resolveStub(string $type): string
     {
-        $group = 'default';
+        $group = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP;
 
-        if ($this->getGroup() !== 'default') {
+        if ($this->getGroup() !== \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP) {
             $group = 'group';
         }
 

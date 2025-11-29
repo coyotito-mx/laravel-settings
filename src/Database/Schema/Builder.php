@@ -9,7 +9,7 @@ use Illuminate\Support\Arr;
 
 final class Builder
 {
-    public const string DEFAULT_GROUP = 'default';
+    public const string DEFAULT_GROUP = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP;
 
     public function __construct(protected Repository $repo)
     {
@@ -48,7 +48,7 @@ final class Builder
     /**
      * Delete setting(s) from the given group
      */
-    public function delete(string|array $settings, string $group = 'default'): void
+    public function delete(string|array $settings, string $group = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP): void
     {
         $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
         $blueprint = new Blueprint($repo);

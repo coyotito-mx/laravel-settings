@@ -68,7 +68,7 @@ describe('settings helper', function () {
             $mock = $this->mock(Repository::class)->makePartial();
 
             $mock->shouldReceive('setGroup')
-                ->with('default')
+                ->with(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)
                 ->andReturn();
 
             return $mock;

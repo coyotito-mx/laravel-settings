@@ -72,7 +72,7 @@ class MakeSettingsClassCommand extends Command
 
         $this
             ->addReservedName('Default')
-            ->addReservedName('default')
+            ->addReservedName(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)
             ->addReservedName('Settings')
             ->addReservedName('settings')
             ->addReservedName('Setting')

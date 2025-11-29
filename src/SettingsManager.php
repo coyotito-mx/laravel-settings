@@ -14,7 +14,7 @@ final class SettingsManager
             $this->repository = app(Repository::class);
         }
 
-        $this->setGroup('default');
+        $this->setGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
     }
 
     public function get(string|array $key, mixed $default = null): mixed

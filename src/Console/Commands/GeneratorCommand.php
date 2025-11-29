@@ -135,7 +135,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
             'g',
             InputOption::VALUE_REQUIRED,
             "The group to use with settings $type",
-            'default'
+            \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP
         );
     }
 
@@ -212,7 +212,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
     {
         $group = $this->option('group');
 
-        if ($group !== 'default') {
+        if ($group !== \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP) {
             $this->ensureNotReserved($group, 'group');
         }
 
