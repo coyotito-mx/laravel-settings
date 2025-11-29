@@ -8,11 +8,11 @@ use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 
 final class SettingsManager
 {
-    protected Repository $repository;
-
-    public function __construct()
+    public function __construct(protected ?Repository $repository = null)
     {
-        $this->repository = app(Repository::class);
+        if (is_null($this->repository)) {
+            $this->repository = app(Repository::class);
+        }
 
         $this->setGroup('default');
     }
@@ -39,7 +39,7 @@ final class SettingsManager
 
     public function group(string $group): self
     {
-        return tap(new self(), fn (self $manager) => $manager->setGroup($group));
+        return tap(new self($this->repository), fn (self $manager) => $manager->setGroup($group));
     }
 
     protected function setGroup(string $group): void
