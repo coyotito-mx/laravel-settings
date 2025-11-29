@@ -28,16 +28,24 @@ class SettingsServiceProvider extends ServiceProvider
             return new LaravelSettingsManager();
         });
 
-        $this->app->bind('settings.repository', function (): Repository {
-            return new EloquentRepository(
-                model: config('settings.model'),
-            );
+        $this->app->bind(Repository::class, function (): Repository {
+            $repo = config('settings.repository');
+
+            return $this->app->make("repository.$repo");
+        });
+
+        $this->app->alias(Repository::class, 'settings.repository');
+
+        $this->app->bind('repository.eloquent', function (): EloquentRepository {
+            $model = config('settings.repositories.eloquent.model');
+
+            return new EloquentRepository($model);
         });
 
         $this->app->bind('settings.schema', function (): Builder {
-            return new Builder(
-                repo: $this->app->make('settings.repository'),
-            );
+            $repo = $this->app->make('settings.repository');
+
+            return new Builder($repo);
         });
 
         $rootNamespace = trim($this->app->getNamespace(), '\\');
