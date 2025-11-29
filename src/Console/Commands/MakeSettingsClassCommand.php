@@ -29,8 +29,6 @@ class MakeSettingsClassCommand extends Command
 
     /**
      * The type of file being generated.
-     *
-     * @var string
      */
     protected static string $type = 'class';
 
@@ -127,7 +125,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function resolveNamespacePath(string $namespace): string
     {
-        if (empty($path = psr4_namespace_to_path($namespace))) {
+        if (blank($path = psr4_namespace_to_path($namespace))) {
             throw new \InvalidArgumentException("The namespace [$namespace] does not exist.");
         }
 

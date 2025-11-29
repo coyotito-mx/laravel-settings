@@ -19,22 +19,16 @@ abstract class Settings
 {
     /**
      * Cache for old settings values
-     *
-     * @var array
      */
     private array $oldSettings = [];
 
     /**
      * The initial values of the settings, and the current state of the
-     *
-     * @var array
      */
     private array $initialSettings = [];
 
     /**
      * Cache of public properties
-     *
-     * @var array
      */
     private array $cachedPublicPropertyNames = [];
 
@@ -74,10 +68,8 @@ abstract class Settings
         $updatedSettings = [];
 
         foreach (array_keys($properties) as $name) {
-            if (array_key_exists($name, $this->initialSettings)) {
-                if ($this->initialSettings[$name] !== $this->$name) {
-                    $updatedSettings[$name] = $this->$name;
-                }
+            if (array_key_exists($name, $this->initialSettings) && $this->initialSettings[$name] !== $this->$name) {
+                $updatedSettings[$name] = $this->$name;
             }
         }
 
@@ -110,7 +102,7 @@ abstract class Settings
      */
     private function getCachedPropertyNames(): array
     {
-        if (empty($this->cachedPublicPropertyNames)) {
+        if (blank($this->cachedPublicPropertyNames)) {
             $properties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);
 
             $this->cachedPublicPropertyNames = collect($properties)
@@ -126,7 +118,6 @@ abstract class Settings
      *
      * @param mixed $value The value to cast
      * @param null|ReflectionIntersectionType|ReflectionNamedType|ReflectionUnionType $type The type to cast the value
-     * @return mixed
      */
     private function castValue(mixed $value, null|\ReflectionIntersectionType|\ReflectionNamedType|\ReflectionUnionType $type): mixed
     {

@@ -11,9 +11,6 @@ namespace Coyotito\LaravelSettings\Helpers
 
     /**
      * Get the package path relative to the package root namespace `Coyotito\LaravelSettings`
-     *
-     * @param string ...$path
-     * @return string
      */
     function package_path(string ...$path): string
     {
@@ -36,7 +33,6 @@ namespace Coyotito\LaravelSettings\Helpers
      * @internal
      *
      * @param string $namespace The namespace to resolve to a path
-     * @return ?string
      */
     function psr4_namespace_to_path(string $namespace): ?string
     {

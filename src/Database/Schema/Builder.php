@@ -21,7 +21,6 @@ final class Builder
      *
      * @param string $group Name of the group
      * @param \Closure(Blueprint $group): void $callback
-     * @return void
      */
     public function in(string $group, \Closure $callback): void
     {
@@ -35,11 +34,10 @@ final class Builder
      * Add settings to the default group
      *
      * @param \Closure(Blueprint $group): void $callback
-     * @return void
      */
     public function default(\Closure $callback): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
+        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(self::DEFAULT_GROUP));
         $blueprint = new Blueprint($repo);
 
         $callback($blueprint);
@@ -48,9 +46,9 @@ final class Builder
     /**
      * Delete setting(s) from the given group
      */
-    public function delete(string|array $settings, string $group = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP): void
+    public function delete(string|array $settings): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
+        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(self::DEFAULT_GROUP));
         $blueprint = new Blueprint($repo);
 
         if (is_string($settings)) {

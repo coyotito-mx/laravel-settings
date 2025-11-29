@@ -28,13 +28,9 @@ class EloquentRepository implements Contracts\Repository
      */
     public function get(string|array $setting, mixed $default = null): mixed
     {
-        if (func_num_args() === 2 || is_string($setting)) {
-            $settings = [
-                $setting => $default
-            ];
-        } else {
-            $settings = $setting;
-        }
+        $settings = func_num_args() === 2 || is_string($setting) ? [
+            $setting => $default
+        ] : $setting;
 
         $isList = array_is_list($settings);
         $settingsNames = $isList ? $settings : array_keys($settings);
@@ -79,7 +75,7 @@ class EloquentRepository implements Contracts\Repository
             ];
         }
 
-        if (empty($setting)) {
+        if (blank($setting)) {
             return;
         }
 
@@ -121,7 +117,7 @@ class EloquentRepository implements Contracts\Repository
             ];
         }
 
-        if (empty($setting)) {
+        if (blank($setting)) {
             return;
         }
 
@@ -150,7 +146,7 @@ class EloquentRepository implements Contracts\Repository
             ];
         }
 
-        if (empty($setting)) {
+        if (blank($setting)) {
             return;
         }
 
@@ -181,7 +177,7 @@ class EloquentRepository implements Contracts\Repository
     {
         $setting = Arr::wrap($setting);
 
-        if (empty($setting)) {
+        if (blank($setting)) {
             return 0;
         }
 
@@ -207,7 +203,7 @@ class EloquentRepository implements Contracts\Repository
      */
     public function group(): string
     {
-        if (! filled($this->group)) {
+        if (blank($this->group)) {
             throw new RuntimeException('The group must not be empty');
         }
 
@@ -247,6 +243,6 @@ class EloquentRepository implements Contracts\Repository
 
     protected function castValue(mixed $value): ?string
     {
-        return ! is_null($value) ? json_encode($value) : null;
+        return filled($value) ? json_encode($value) : null;
     }
 }

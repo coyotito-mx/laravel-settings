@@ -122,7 +122,7 @@ describe('settings helper', function () {
             ->with(['key1', 'key2'])
             ->andReturn(['key1' => 'value1', 'key2' => null]);
 
-        expect(settings(['key1', 'key2'], null))
+        expect(settings(['key1', 'key2']))
             ->toBe(['key1' => 'value1', 'key2' => null]);
     });
 

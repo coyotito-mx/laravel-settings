@@ -11,7 +11,6 @@ trait InteractsWithStubs
     /**
      *
      * @param string $type The type of the stub (class|migration)
-     * @return string
      */
     protected function resolveStub(string $type): string
     {

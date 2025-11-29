@@ -42,7 +42,7 @@ expect()->extend('toBeInDirectory', function (string $directory) {
     $files = glob(join_paths($directory, "*.$ext"));
     $files = array_map(fn (string $file): string => pathinfo($file, PATHINFO_BASENAME), $files ?: []);
 
-    if (empty($files)) {
+    if (blank($files)) {
         return test()->fail("The file [$this->value] is not in the directory [$directory]");
     }
 
@@ -76,13 +76,11 @@ expect()->extend('toBeClassSettings', function () {
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
-
 /**
  * Delete folder recursively
  *
  * @param string $directory The root directory to delete
  * @param bool $delete_root Should delete the root directory
- * @return bool
  */
 function rmdir_recursive(string $directory, bool $delete_root = true): bool
 {

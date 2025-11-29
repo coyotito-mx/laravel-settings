@@ -38,7 +38,6 @@ final class Setting extends Model
      *
      * @param mixed $query Model query
      * @param string $group The group to filter for
-     * @return void
      */
     public function scopeByGroup($query, string $group): void
     {
