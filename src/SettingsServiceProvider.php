@@ -87,10 +87,6 @@ class SettingsServiceProvider extends ServiceProvider
         $classes = LaravelSettings::getClasses();
 
         foreach ($classes as $class) {
-            if (! is_subclass_of($class, Settings::class)) {
-                continue;
-            }
-
             $this->app->scoped($class, function () use ($class) {
                 /**
                  * @var Settings $class

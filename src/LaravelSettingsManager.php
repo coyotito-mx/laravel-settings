@@ -56,10 +56,12 @@ class LaravelSettingsManager
             return null;
         }
 
-        return Arr::map($files, function (string $file) use ($namespace): string {
+        $classes = Arr::map($files, function (string $file) use ($namespace): string {
             $className = pathinfo($file, PATHINFO_FILENAME);
 
             return "$namespace\\$className";
         });
+
+        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Setting::class));
     }
 }
