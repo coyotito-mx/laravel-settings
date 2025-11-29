@@ -1,6 +1,7 @@
 <?php
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use Mockery\LegacyMockInterface;
 use Orchestra\Testbench;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
@@ -72,6 +73,11 @@ describe('settings helper', function () {
 
             return $mock;
         });
+
+        /**
+         * @var Repository&LegacyMockInterface $this->repo
+         */
+        $this->repo = app(Repository::class);
     });
 
     it('returns settings manager instance', function () {
@@ -80,11 +86,22 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting) as get, not set', function () {
+        $this->repo->shouldReceive('get')
+            ->with('key')
+            ->andReturn('value');
+
         expect(settings('key'))
             ->toBe('value');
     });
 
     it('treats settings(setting, default) as get with default, not set', function () {
+        $this->repo->shouldReceive('get')
+            ->with('non_existent_key', 'default_value')
+            ->andReturn('default_value')
+            ->shouldReceive('get')
+            ->with('key', 'default_value')
+            ->andReturn('value');
+
         expect(settings('non_existent_key', 'default_value'))
             ->toBe('default_value')
             ->and(settings('key', 'default_value'))
@@ -92,16 +109,31 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string>) as get, not set', function () {
+        $this->repo->shouldReceive('get')
+            ->with(['key1', 'key2'])
+            ->andReturn(['key1' => 'value1', 'key2' => 'value2']);
+
         expect(settings(['key1', 'key2']))
             ->toBe(['key1' => 'value1', 'key2' => 'value2']);
     });
 
     it('treats settings(array<string>, default) as get, not set', function () {
+        $this->repo->shouldReceive('get')
+            ->with(['key1', 'key2'])
+            ->andReturn(['key1' => 'value1', 'key2' => null]);
+
         expect(settings(['key1', 'key2'], null))
             ->toBe(['key1' => 'value1', 'key2' => null]);
     });
 
     it('treats settings(array<string, mixed>) as set, not get', function () {
+        $this->repo->shouldReceive('upsert')
+            ->with(['key1' => 'value1', 'key2' => 'value2'])
+            ->andReturn()
+            ->shouldReceive('get')
+            ->with(['key1', 'key2'])
+            ->andReturn(['key1' => 'value1', 'key2' => 'value2']);
+
         settings(['key1' => 'value1', 'key2' => 'value2']);
 
         expect(settings(['key1', 'key2']))
@@ -109,9 +141,16 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting, array<string, mixed>) as set in group, not get', function () {
+        $this->repo->shouldReceive('setGroup')
+            ->andReturn()
+            ->shouldReceive('upsert')
+            ->andReturn()
+            ->shouldReceive('get')
+            ->andReturn(['key1' => 'value1', 'key2' => 'value2']);
+
         settings('group', ['key1' => 'value1', 'key2' => 'value2']);
 
         expect(settings('group', ['key1', 'key2']))
             ->toBe(['key1' => 'value1', 'key2' => 'value2']);
     });
-})->todo();
+});

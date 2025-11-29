@@ -65,29 +65,30 @@ namespace Coyotito\LaravelSettings\Helpers
 
     /**
      * Get / set settings values
-     *
-     * @return ($setting is null ? SettingsManager : ($setting is string ? ($default is array ? SettingsManager : mixed) : array))
      */
     function settings(null|string|array $setting = null, mixed $default = null)
     {
-        $instance = new SettingsManager();
+        $manager = new SettingsManager();
 
+        // If no arguments, return the manager instance
         if ($setting === null) {
-            return $instance;
+            return $manager;
         }
 
-        if (is_string($setting)) {
-            if (func_num_args() > 1 && is_array($default)) {
-                return $instance->group($setting)->set($default);
-            }
-
-            return $instance->get($setting, $default);
+        // If $setting is an array and not a list, a massive set is intended
+        if (is_array($setting) && ! array_is_list($setting)) {
+            return $manager->set($setting, $default);
         }
 
-        if (array_is_list($setting)) {
-            return $instance->get($setting);
+        // If $default is not an array, is simple get
+        if (! is_array($default)) {
+            return $manager->get($setting, $default);
         }
 
-        return $instance->set($setting);
+        // If $default is an array, treat as group get / set
+        $group = $manager->group($setting);
+
+        // If $default is a list, treat as group get, otherwise group set
+        return array_is_list($default) ? $group->get($default) : $group->set($default);
     }
 }
