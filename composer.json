@@ -12,7 +12,8 @@
           "laravel/pint": "^v1.25.1",
           "orchestra/testbench": "^10.6",
           "pestphp/pest": "v4.1.2",
-          "pestphp/pest-plugin-laravel": "^4.0"
+          "pestphp/pest-plugin-laravel": "^4.0",
+          "rector/rector": "^2.2"
      },
     "autoload": {
         "psr-4": {
