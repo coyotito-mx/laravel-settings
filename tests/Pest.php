@@ -11,7 +11,6 @@
 |
 */
 
-use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -43,7 +42,7 @@ expect()->extend('toBeInDirectory', function (string $directory) {
     $files = array_map(fn (string $file): string => pathinfo($file, PATHINFO_BASENAME), $files ?: []);
 
     if (blank($files)) {
-        return test()->fail("The file [$this->value] is not in the directory [$directory]");
+        test()->fail("The file [$this->value] is not in the directory [$directory]");
     }
 
     $filesInDirectory = implode(", ", $files);
@@ -59,11 +58,10 @@ expect()->extend('toBeClassSettings', function () {
 
     expect($directory)
         ->not->toBeEmpty('The provided class namespace is invalid.')
-        ->and("$class.php")->toBeInDirectory($directory);
-
-    $repo = Mockery::mock(Repository::class)->shouldIgnoreMissing();
-
-    return expect(new $this->value($repo))->toBeInstanceOf(Settings::class);
+        ->and("$class.php")->toBeInDirectory($directory)
+        ->and(new ReflectionClass($this->value))
+        ->isSubclassOf(Settings::class)
+        ->toBeTrue("The class [$class] is not a subclass of [Settings]");
 });
 
 /*
