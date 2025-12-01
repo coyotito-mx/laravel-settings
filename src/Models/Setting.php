@@ -30,7 +30,6 @@ final class Setting extends Model
 
     public $casts = [
         'locked' => 'boolean',
-        'payload' => 'json',
     ];
 
     /**

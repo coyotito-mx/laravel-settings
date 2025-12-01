@@ -10,6 +10,7 @@ use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
+use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
 use Illuminate\Support\ServiceProvider;
 use Coyotito\LaravelSettings\Facades\LaravelSettings;
 
@@ -40,6 +41,10 @@ class SettingsServiceProvider extends ServiceProvider
             $model = config('settings.repositories.eloquent.model');
 
             return new EloquentRepository($model);
+        });
+
+        $this->app->bind('repository.in-memory', function (): InMemoryRepository {
+            return new InMemoryRepository();
         });
 
         $this->app->bind('settings.schema', function (): Builder {

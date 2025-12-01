@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings;
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use InvalidArgumentException;
+use ReflectionClass;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
+use ReflectionProperty;
 use ReflectionUnionType;
-use RuntimeException;
 
 /**
  * Abstract base class for application settings with automatic persistence.
@@ -20,31 +22,49 @@ abstract class Settings
     /**
      * Cache for old settings values
      */
-    private array $oldSettings = [];
+    final protected array $oldSettings = [];
 
     /**
      * The initial values of the settings, and the current state of the
      */
-    private array $initialSettings = [];
+    final protected array $initialSettings = [];
 
     /**
      * Cache of public properties
      */
-    private array $cachedPublicPropertyNames = [];
+    final protected array $cachedPublicPropertyNames = [];
 
+    /**
+     * The default group name
+     */
     public const string DEFAULT_GROUP = 'default';
 
-    public function __construct(protected Repository $repository)
+    public function __construct(protected Repository $repository, protected string $group = self::DEFAULT_GROUP)
     {
-        $this->setupGroup();
+        $this->repository->group = $this->group;
 
-        $this->fill($this->repository->getAll());
+        $properties = array_keys($this->getCachedPropertyNames());
+
+        $this->fill(
+            $this->repository->get($properties) ?? []
+        );
+    }
+
+    public function get(string|array $key, mixed $default = null): mixed
+    {
+        if (is_string($key)) {
+            return $this->{$key} ?? $default;
+        }
+
+        return collect($key)
+            ->mapWithKeys(fn (string $k) => [$k => $this->get($k, $default)])
+            ->all();
     }
 
     /**
      * Fill the settings with the given data
      */
-    private function fill(array $data): static
+    public function fill(array $data): static
     {
         $properties = $this->getCachedPropertyNames();
 
@@ -52,7 +72,9 @@ abstract class Settings
             if (array_key_exists($name, $data)) {
                 $this->$name = filled($data[$name]) ? $this->castValue($data[$name], $type) : null;
 
-                $this->initialSettings[$name] = $this->$name;
+                if (! isset($this->initialSettings[$name])) {
+                    $this->initialSettings[$name] = $this->$name;
+                }
             }
         }
 
@@ -77,40 +99,26 @@ abstract class Settings
     }
 
     /**
-     * Setup the settings' group
-     */
-    private function setupGroup(): void
-    {
-        try {
-            $method = new \ReflectionMethod($this, 'group');
-
-            if ($method->isStatic()) {
-                $this->repository->setGroup($method->invoke(null));
-            } else {
-                throw new RuntimeException('The group method must be static.');
-            }
-        } catch (\ReflectionException) {
-            // If method `Repository::group` does not exists, we use the default group
-            $this->repository->setGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
-        }
-    }
-
-    /**
      * Get the public property names and their types.
      *
-     * @return array<string, \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null>
+     * @return array<string, ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null>
      */
     private function getCachedPropertyNames(): array
     {
         if (blank($this->cachedPublicPropertyNames)) {
-            $properties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);
-
-            $this->cachedPublicPropertyNames = collect($properties)
-                ->mapWithKeys(fn (\ReflectionProperty $property) => [$property->name => $property->getType()])
-                ->all();
+            $this->cachedPublicPropertyNames = $this->resolvePublicProperties();
         }
 
         return $this->cachedPublicPropertyNames;
+    }
+
+    protected function resolvePublicProperties(): array
+    {
+        $properties = new ReflectionClass($this)->getProperties(ReflectionProperty::IS_PUBLIC);
+
+        return collect($properties)
+            ->mapWithKeys(fn (ReflectionProperty $property) => [$property->name => $property->getType()])
+            ->all();
     }
 
     /**
@@ -125,15 +133,15 @@ abstract class Settings
             return $value;
         }
 
-        if ($type instanceof \ReflectionIntersectionType) {
-            throw new \InvalidArgumentException('Intersection types are not supported.');
+        if ($type instanceof ReflectionIntersectionType) {
+            throw new InvalidArgumentException('Intersection types are not supported.');
         }
 
-        if ($type instanceof \ReflectionUnionType) {
+        if ($type instanceof ReflectionUnionType) {
             $types = $type->getTypes();
 
             if (count($types) > 1) {
-                throw new \InvalidArgumentException('Union types with more than one type are not supported.');
+                throw new InvalidArgumentException('Union types with more than one type are not supported.');
             }
 
             $type = $types[0];
@@ -149,7 +157,7 @@ abstract class Settings
             'float' => (float) $value,
             'bool' => (bool) $value,
             'string' => (string) $value,
-            default => throw new \InvalidArgumentException("Unsupported type casting: {$type->getName()}"),
+            default => throw new InvalidArgumentException("Unsupported type casting: {$type->getName()}"),
         };
     }
 
@@ -182,5 +190,10 @@ abstract class Settings
             ->merge($this->getUpdated())
             ->mapWithKeys(fn (mixed $payload, string $setting) => [$setting => $payload])
             ->all();
+    }
+
+    public static function getGroup(): string
+    {
+        return Settings::DEFAULT_GROUP;
     }
 }
