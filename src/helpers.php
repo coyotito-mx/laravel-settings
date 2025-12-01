@@ -30,9 +30,10 @@ namespace Coyotito\LaravelSettings\Helpers
      *
      * The namespace must be defined in composer.json `autoload.psr-4` and the path must exist in the base path.
      *
+     * @param string $namespace The namespace to resolve to a path
+     *
      * @internal
      *
-     * @param string $namespace The namespace to resolve to a path
      */
     function psr4_namespace_to_path(string $namespace): ?string
     {
