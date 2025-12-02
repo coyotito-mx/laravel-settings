@@ -1,12 +1,12 @@
 <?php
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use Coyotito\LaravelSettings\Settings;
+use Coyotito\LaravelSettings\AbstractSettings;
 
 beforeEach(function () {
     /** @var Repository $repo */
     $repo = app()->make('repository.in-memory');
-    $repo->group = Settings::DEFAULT_GROUP;
+    $repo->group = AbstractSettings::DEFAULT_GROUP;
 
     $this->repo = $repo;
 });
@@ -179,7 +179,7 @@ it('renames group and moves all settings to the new group', function () {
     ]);
 
     expect($this->repo)
-        ->group->toBe(Settings::DEFAULT_GROUP)
+        ->group->toBe(AbstractSettings::DEFAULT_GROUP)
         ->getAll()->toHaveCount(2);
 
     $this->repo->renameGroup('other');

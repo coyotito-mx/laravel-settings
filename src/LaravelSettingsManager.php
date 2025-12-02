@@ -38,15 +38,15 @@ class LaravelSettingsManager
     /**
      * Fake a settings class with the given data for testing purposes
      */
-    public function fake(array $data = [], string $group = Settings::DEFAULT_GROUP): void
+    public function fake(array $data = [], string $group = AbstractSettings::DEFAULT_GROUP): void
     {
         $this->clearResolvedSettings();
         $this->swapRepository(fn () => new InMemoryRepository($group));
 
-        $this->app->bind(Settings::class."::$group", function () use ($data, $group) {
+        $this->app->bind(AbstractSettings::class."::$group", function () use ($data, $group) {
             $repository = $this->app->make('settings.repository');
 
-            return new #[AllowDynamicProperties] class ($repository, $group, $data) extends Settings {
+            return new #[AllowDynamicProperties] class ($repository, $group, $data) extends AbstractSettings {
                 public function __construct(protected Repository $repository, protected string $group, protected array $dynamicSettings)
                 {
                     $this->setDynamicSettings($this->dynamicSettings);
@@ -202,13 +202,13 @@ class LaravelSettingsManager
             return "$namespace\\$className";
         });
 
-        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class));
+        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, AbstractSettings::class));
     }
 
     /**
      * Get the resolved settings class
      */
-    protected function getResolvedSettingsClass(string $key): ?Settings
+    protected function getResolvedSettingsClass(string $key): ?AbstractSettings
     {
         if ($settingsClass = static::$resolvedSettings[$key] ?? null) {
             return $settingsClass;
@@ -235,9 +235,9 @@ class LaravelSettingsManager
      */
     public function getSettingsGroupKey(string $class): string
     {
-        $group = is_subclass_of($class, Settings::class) ? $class::getGroup() : $class;
+        $group = is_subclass_of($class, AbstractSettings::class) ? $class::getGroup() : $class;
 
-        return sprintf("%s::%s", Settings::class, $group);
+        return sprintf("%s::%s", AbstractSettings::class, $group);
     }
 
     public function ensureGroupIsUnique(string $key, string $group): void
@@ -258,9 +258,9 @@ class LaravelSettingsManager
     /**
      * Resolve the settings class with the given group if exists
      */
-    public function resolveSettings(?string $group = null): ?Settings
+    public function resolveSettings(?string $group = null): ?AbstractSettings
     {
-        $group ??= Settings::DEFAULT_GROUP;
+        $group ??= AbstractSettings::DEFAULT_GROUP;
 
         return $this->getResolvedSettingsClass(
             $this->getSettingsGroupKey($group)

@@ -7,7 +7,7 @@ namespace Coyotito\LaravelSettings\Repositories;
 use Coyotito\LaravelSettings\Casters\Contracts\PrepareValue;
 use Coyotito\LaravelSettings\Casters\PrepareEloquentValue;
 use Coyotito\LaravelSettings\Models\Setting;
-use Coyotito\LaravelSettings\Settings;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -24,7 +24,7 @@ class EloquentRepository extends BaseRepository
      * @param class-string<Setting> $model The Eloquent model class to use for settings storage
      * @param string $group The group name for the settings
      */
-    public function __construct(protected string $model, string $group = Settings::DEFAULT_GROUP)
+    public function __construct(protected string $model, string $group = AbstractSettings::DEFAULT_GROUP)
     {
         parent::__construct($group);
     }

@@ -141,7 +141,7 @@ it('can create settings for a custom group', function () {
 
         namespace App\Settings;
 
-        use Coyotito\LaravelSettings\Settings;
+        use Coyotito\LaravelSettings\AbstractSettings as Settings;
 
         class Billing extends Settings
         {
@@ -154,7 +154,8 @@ it('can create settings for a custom group', function () {
             }
         }
 
-        PHP)
+        PHP
+        )
         ->and(File::get($migration))
         ->toBe(<<<'PHP'
         <?php

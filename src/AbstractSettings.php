@@ -17,7 +17,7 @@ use ReflectionUnionType;
  *
  * Provides automatic casting, change tracking, and group management.
  */
-abstract class Settings
+abstract class AbstractSettings
 {
     /**
      * Cache for old settings values
@@ -194,6 +194,6 @@ abstract class Settings
 
     public static function getGroup(): string
     {
-        return Settings::DEFAULT_GROUP;
+        return AbstractSettings::DEFAULT_GROUP;
     }
 }

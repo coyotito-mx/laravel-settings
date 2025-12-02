@@ -2,7 +2,7 @@
 
 namespace Coyotito\LaravelSettings\Repositories;
 
-use Coyotito\LaravelSettings\Settings;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Illuminate\Support\Collection;
 
 /**
@@ -17,7 +17,7 @@ final class InMemoryRepository extends BaseRepository
 {
     protected Collection $storage;
 
-    public function __construct(string $group = Settings::DEFAULT_GROUP)
+    public function __construct(string $group = AbstractSettings::DEFAULT_GROUP)
     {
         parent::__construct($group);
 

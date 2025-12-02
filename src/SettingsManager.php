@@ -9,7 +9,7 @@ use RuntimeException;
 
 final class SettingsManager
 {
-    public function __construct(protected ?LaravelSettingsManager $manager = null, protected string $group = Settings::DEFAULT_GROUP)
+    public function __construct(protected ?LaravelSettingsManager $manager = null, protected string $group = AbstractSettings::DEFAULT_GROUP)
     {
         $this->manager ??= app(LaravelSettingsManager::class);
     }
@@ -52,7 +52,7 @@ final class SettingsManager
         return new self($this->manager, $group);
     }
 
-    protected function settings(): Settings
+    protected function settings(): AbstractSettings
     {
         $settings = $this->manager->resolveSettings($this->group);
 

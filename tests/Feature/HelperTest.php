@@ -13,7 +13,7 @@ dataset('paths', [
     'stubs',
     'src',
     'src/helpers.php',
-    'src/Settings.php',
+    'src/AbstractSettings.php',
     'src/SettingsServiceProvider.php',
     'composer.json',
     'composer.lock',

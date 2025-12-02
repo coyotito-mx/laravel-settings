@@ -9,7 +9,7 @@ use Illuminate\Support\Arr;
 
 final class Builder
 {
-    public const string DEFAULT_GROUP = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP;
+    public const string DEFAULT_GROUP = \Coyotito\LaravelSettings\AbstractSettings::DEFAULT_GROUP;
 
     public function __construct(protected Repository $repo)
     {

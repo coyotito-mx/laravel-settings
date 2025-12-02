@@ -6,7 +6,7 @@ namespace Coyotito\LaravelSettings\Repositories;
 
 use Closure;
 use Coyotito\LaravelSettings\Casters\Contracts\PrepareValue;
-use Coyotito\LaravelSettings\Settings;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
  */
 abstract class BaseRepository implements Contracts\Repository
 {
-    public function __construct(public string $group = Settings::DEFAULT_GROUP)
+    public function __construct(public string $group = AbstractSettings::DEFAULT_GROUP)
     {
         //
     }
