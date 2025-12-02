@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @mixin Model
  *
- * @package Coyotito\LaravelSettings
+ * @package Coyotito\SettingsManager
  */
 final class Setting extends Model
 {

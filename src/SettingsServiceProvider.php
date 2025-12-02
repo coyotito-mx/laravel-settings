@@ -14,7 +14,7 @@ use Coyotito\LaravelSettings\Repositories\EloquentRepository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use Coyotito\LaravelSettings\Facades\LaravelSettings;
+use Coyotito\LaravelSettings\Facades\SettingsManager;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
 
@@ -57,7 +57,7 @@ class SettingsServiceProvider extends ServiceProvider
 
         $rootNamespace = trim($this->app->getNamespace(), '\\');
 
-        LaravelSettings::addNamespace("$rootNamespace\\Settings");
+        SettingsManager::addNamespace("$rootNamespace\\Settings");
     }
 
     public function boot(): void
@@ -91,16 +91,16 @@ class SettingsServiceProvider extends ServiceProvider
 
     public function bindSettingClasses(): void
     {
-        LaravelSettings::clearResolvedSettings();
+        SettingsManager::clearResolvedSettings();
 
-        $classes = LaravelSettings::getClasses();
+        $classes = SettingsManager::getClasses();
 
         foreach ($classes as $class) {
             /** @var class-string<Setting> $keyClass */
             $group = $class::getGroup();
-            $keyClass = LaravelSettings::getSettingsGroupKey($group);
+            $keyClass = SettingsManager::getSettingsGroupKey($group);
 
-            LaravelSettings::ensureGroupIsUnique($keyClass, $group);
+            SettingsManager::ensureGroupIsUnique($keyClass, $group);
 
             $this->app->scoped($class, function () use ($class) {
                 $repository = $this->app->make('settings.repository');

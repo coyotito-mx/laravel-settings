@@ -11,7 +11,7 @@ namespace Coyotito\LaravelSettings\Helpers
     use function Illuminate\Filesystem\join_paths;
 
     /**
-     * Get the package path relative to the package root namespace `Coyotito\LaravelSettings`
+     * Get the package path relative to the package root namespace `Coyotito\SettingsManager`
      */
     function package_path(string ...$path): string
     {

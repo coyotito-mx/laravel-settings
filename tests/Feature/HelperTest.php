@@ -1,6 +1,6 @@
 <?php
 
-use Coyotito\LaravelSettings\Facades\LaravelSettings;
+use Coyotito\LaravelSettings\Facades\SettingsManager;
 use Orchestra\Testbench;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
@@ -48,25 +48,25 @@ describe('psr4 namespace to path helper', function () {
 
     it('resolves root namespace to path', function () {
         psr4_namespaces([
-            'Coyotito\\LaravelSettings' => [package_path('src')],
+            'Coyotito\\SettingsManager' => [package_path('src')],
         ]);
 
-        expect(psr4_namespace_to_path('Coyotito\\LaravelSettings'))
+        expect(psr4_namespace_to_path('Coyotito\\SettingsManager'))
             ->toBe(Testbench\package_path('src'));
     });
 
     it('resolves sub-namespace to path', function () {
         psr4_namespaces([
-            'Coyotito\\LaravelSettings' => [package_path('src')],
+            'Coyotito\\SettingsManager' => [package_path('src')],
         ]);
 
-        expect(psr4_namespace_to_path('Coyotito\\LaravelSettings\Helpers'))
+        expect(psr4_namespace_to_path('Coyotito\\SettingsManager\Helpers'))
             ->toBe(package_path('src', 'Helpers'));
     });
 
     it('returns null for non-existent namespace', function () {
         psr4_namespaces([
-            'Coyotito\\LaravelSettings' => [package_path('src')],
+            'Coyotito\\SettingsManager' => [package_path('src')],
         ]);
 
         expect(psr4_namespace_to_path('NonExistent\Namespace'))
@@ -81,7 +81,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting) as get, not set', function () {
-        LaravelSettings::fake([
+        SettingsManager::fake([
             'key' => 'value',
         ]);
 
@@ -90,7 +90,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting, default) as get with default, not set', function () {
-        LaravelSettings::fake([
+        SettingsManager::fake([
             'key' => 'value',
         ]);
 
@@ -101,7 +101,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string>) as get, not set', function () {
-        LaravelSettings::fake([
+        SettingsManager::fake([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -111,7 +111,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string>, default) as get, not set', function () {
-        LaravelSettings::fake([
+        SettingsManager::fake([
             'key1' => 'value1',
         ]);
 
@@ -120,7 +120,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string, mixed>) as set, not get', function () {
-        LaravelSettings::fake([
+        SettingsManager::fake([
             'key1' => 'old_value1',
             'key2' => 'old_value2',
         ]);
@@ -132,7 +132,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting, array<string, mixed>) as set in group, not get', function () {
-        LaravelSettings::fake([
+        SettingsManager::fake([
             'key1' => 'old_value1',
             'key2' => 'old_value2',
         ], 'group');

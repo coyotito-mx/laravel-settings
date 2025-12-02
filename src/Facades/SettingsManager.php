@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @mixin LaravelSettingsManager
  */
-class LaravelSettings extends Facade
+class SettingsManager extends Facade
 {
     /**
      * Get the registered name of the component.

@@ -8,7 +8,7 @@ namespace Coyotito\LaravelSettings\Repositories\Contracts;
  *
  * Handles the processing of settings from a group of settings
  *
- * @package Coyotito\LaravelSettings
+ * @package Coyotito\SettingsManager
  */
 interface Repository
 {

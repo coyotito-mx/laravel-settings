@@ -2,7 +2,7 @@
 
 namespace Workbench\App\Providers;
 
-use Coyotito\LaravelSettings\Facades\LaravelSettings;
+use Coyotito\LaravelSettings\Facades\SettingsManager;
 use Illuminate\Support\ServiceProvider;
 
 class WorkbenchServiceProvider extends ServiceProvider
@@ -12,6 +12,6 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        LaravelSettings::addNamespace('Workbench\\App\\Settings');
+        SettingsManager::addNamespace('Workbench\\App\\Settings');
     }
 }
