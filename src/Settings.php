@@ -9,11 +9,17 @@ use RuntimeException;
 
 class Settings
 {
-    public function __construct(protected ?SettingsManager $manager = null, protected string $group = AbstractSettings::DEFAULT_GROUP)
+    public function __construct(protected ?SettingsManager $manager, protected string $group = AbstractSettings::DEFAULT_GROUP)
     {
-        $this->manager ??= app(SettingsManager::class);
+        //
     }
 
+    /**
+     * Get settings
+     *
+     * if `$key` is string and `$default` an `array`, the `$key` will now represent
+     * the group from where you want to get the settings
+     */
     public function get(string|array $key, mixed $default = null): mixed
     {
         if (is_null($default)) {
@@ -23,6 +29,12 @@ class Settings
         return $this->settings()->get($key, $default);
     }
 
+    /**
+     * Update settings
+     *
+     * if `$key` is string and `$default` an `array`, the `$key` will now represent
+     * the group from where you want to update the settings
+     */
     public function set(string|array $values, mixed $default = null): self
     {
         if (is_string($values)) {
@@ -47,11 +59,17 @@ class Settings
         return $this;
     }
 
+    /**
+     * Specify the settings group
+     */
     public function group(string $group): self
     {
         return new self($this->manager, $group);
     }
 
+    /**
+     * Manage the settings based on the specified group
+     */
     protected function settings(): AbstractSettings
     {
         $settings = $this->manager->resolveSettings($this->group);

@@ -78,9 +78,17 @@ class SettingsServiceProvider extends ServiceProvider
 
         $this->app->alias(Repository::class, 'settings.repository');
 
-        $this->app->singleton('settings.manager', function (Application $app): SettingsManager {
+        $this->app->scoped('settings.manager', function (Application $app): SettingsManager {
             return new SettingsManager($app);
         });
+
+        $this->app->scoped(Settings::class, function (Application $app): Settings {
+            $manager = $app->make('settings.manager');
+
+            return new Settings($manager);
+        });
+
+        $this->app->alias(Settings::class, 'settings.service');
     }
 
     /**

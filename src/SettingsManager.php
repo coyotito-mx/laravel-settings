@@ -31,10 +31,8 @@ class SettingsManager
 
     protected array $resolvedNamespaces = [];
 
-    public function __construct(protected ?Application $app = null)
+    public function __construct(protected ?Application $app)
     {
-        $this->app ??= app();
-
         $this->repository = $this->app->make('settings.repository');
     }
 

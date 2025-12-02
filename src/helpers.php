@@ -63,29 +63,35 @@ namespace Coyotito\LaravelSettings\Helpers
     }
 
     /**
-     * Get / set settings values
+     * Get / Update settings values
+     *
+     *
+     * if `$setting` is string and `$default` an `array<int, string>, the `$setting` will now represent
+     * the group from where you want to get the settings, but if the `array` is `array<string, mixed>`, this
+     * will represent to update the specified settings
      */
     function settings(null|string|array $setting = null, mixed $default = null)
     {
-        $manager = new Settings();
+        /** @var Settings $service */
+        $service = app()->make('settings.service');
 
-        // If no arguments, return the manager instance
+        // If no arguments, return the service instance
         if ($setting === null) {
-            return $manager;
+            return $service;
         }
 
         // If $setting is an array and not a list, a massive set is intended
         if (is_array($setting) && ! array_is_list($setting)) {
-            return $manager->set($setting, $default);
+            return $service->set($setting, $default);
         }
 
         // If $default is not an array, is simple get
         if (! is_array($default)) {
-            return $manager->get($setting, $default);
+            return $service->get($setting, $default);
         }
 
         // If $default is an array, treat as group get / set
-        $group = $manager->group($setting);
+        $group = $service->group($setting);
 
         // If $default is a list, treat as group get, otherwise group set
         return array_is_list($default) ? $group->get($default) : $group->set($default);
