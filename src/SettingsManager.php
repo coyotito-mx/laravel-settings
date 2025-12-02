@@ -19,7 +19,7 @@ use RuntimeException;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
-class LaravelSettingsManager
+class SettingsManager
 {
     protected array $settingsFolders = [];
 

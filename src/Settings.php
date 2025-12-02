@@ -7,11 +7,11 @@ namespace Coyotito\LaravelSettings;
 use Illuminate\Support\Arr;
 use RuntimeException;
 
-final class Settings
+class Settings
 {
-    public function __construct(protected ?LaravelSettingsManager $manager = null, protected string $group = AbstractSettings::DEFAULT_GROUP)
+    public function __construct(protected ?SettingsManager $manager = null, protected string $group = AbstractSettings::DEFAULT_GROUP)
     {
-        $this->manager ??= app(LaravelSettingsManager::class);
+        $this->manager ??= app(SettingsManager::class);
     }
 
     public function get(string|array $key, mixed $default = null): mixed

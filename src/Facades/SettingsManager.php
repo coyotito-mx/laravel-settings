@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Facades;
 
-use Coyotito\LaravelSettings\LaravelSettingsManager;
+use Coyotito\LaravelSettings\SettingsManager as Manager;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @mixin LaravelSettingsManager
+ * @mixin Manager
  */
 class SettingsManager extends Facade
 {
