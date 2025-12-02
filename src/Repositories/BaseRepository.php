@@ -13,7 +13,9 @@ use Illuminate\Support\Collection;
 /**
  * Base repository for settings storage.
  *
- * @template TSetting of array{name: string, payload: PrepareValue}
+ * @template-covariant TPrepareValue of PrepareValue
+ * @template TNormalizedSetting of array{name: string, payload: TPrepareValue}
+ *
  */
 abstract class BaseRepository implements Contracts\Repository
 {
@@ -22,9 +24,8 @@ abstract class BaseRepository implements Contracts\Repository
         //
     }
 
-
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function get(string|array $setting, mixed $default = null): mixed
     {
@@ -32,7 +33,7 @@ abstract class BaseRepository implements Contracts\Repository
         $settings = $this->getSettings($normalizedSettings->keys()->all());
 
         $result = $normalizedSettings->mapWithKeys(function (mixed $defaultValue, string $name) use ($settings) {
-            /** @var TSetting $setting */
+            /** @var TNormalizedSetting $setting */
             $setting = $settings->get($name, $defaultValue);
 
             return [$name => $setting['payload']->restore()];
@@ -46,7 +47,7 @@ abstract class BaseRepository implements Contracts\Repository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getAll(): array
     {
@@ -57,7 +58,7 @@ abstract class BaseRepository implements Contracts\Repository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function update(string|array $setting, mixed $value = null): void
     {
@@ -66,11 +67,15 @@ abstract class BaseRepository implements Contracts\Repository
                 return $this->getSettings($settings)->keys()->all();
             });
 
+        if ($settings->isEmpty()) {
+            return;
+        }
+
         $this->updateMany($settings->all());
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function insert(string|array $setting, mixed $value = null): void
     {
@@ -80,9 +85,16 @@ abstract class BaseRepository implements Contracts\Repository
             return array_diff($settings, $existingSettings);
         });
 
+        if ($settings->isEmpty()) {
+            return;
+        }
+
         $this->insertMany($settings->all());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function upsert(string|array $setting, mixed $value = null): void
     {
         $settings = $this->normalizeSettings($setting, $value);
@@ -91,12 +103,12 @@ abstract class BaseRepository implements Contracts\Repository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function delete(string|array $setting): void
     {
-        $settings = $this->normalizeSettings($setting, only: function (array $settings) {
-            return $this->getSettings($settings)->keys();
+        $settings = $this->normalizeSettings($setting, only: function (array $settings): array {
+            return $this->getSettings($settings)->keys()->all();
         });
 
         $this->deleteMany($settings->keys()->all());
@@ -112,7 +124,7 @@ abstract class BaseRepository implements Contracts\Repository
      * @param mixed $default The default value to use if a setting value is not provided
      * @param null|Collection|array|Closure(string[] $settings): string[] $only An optional filter to include only specific settings
      *
-     * @return Collection<string, TSetting> A collection of setting names and their values
+     * @returns Collection<string, TNormalizedSetting>
      */
     protected function normalizeSettings(string|array $setting, mixed $default = null, null|Collection|array|Closure $only = null): Collection
     {
@@ -142,6 +154,8 @@ abstract class BaseRepository implements Contracts\Repository
 
     /**
      * Cast the value from storage
+     *
+     * @returns TPrepareValue
      */
     protected function castValue(mixed $value): PrepareValue
     {
@@ -173,8 +187,7 @@ abstract class BaseRepository implements Contracts\Repository
      *
      * If no settings names are provided, all settings will be retrieved from the storage.
      *
-     * @param ?array $settings The names of the settings to retrieve
-     * @return Collection<string, TSetting> A collection of setting names and their values
+     * @param ?string[] $settings The names of the settings to retrieve
      */
     abstract protected function getSettings(?array $settings = null): Collection;
 
@@ -182,21 +195,23 @@ abstract class BaseRepository implements Contracts\Repository
      * Update many settings in the storage
      *
      * This function will update multiple settings in the storage based on the provided
-     * pair of setting names and their values.
+     * pair of setting names and their values, and only provide the data to update
+     * for already present settings.
      *
-     * @param Collection<string, TSetting>|array<string, TSetting> $settings The pair of setting names and their values
+     * @returns array<string, TNormalizedSetting>
      */
-    abstract protected function updateMany(Collection|array $settings): void;
+    abstract protected function updateMany(array $settings): void;
 
     /**
      * Insert many settings in the storage
      *
      * This function will insert multiple settings in the storage based on the provided
-     * pair of setting names and their values.
+     * pair of setting names and their values, and only provide the data to insert
+     * non-present settings.
      *
-     * @param Collection<string, TSetting>|array<string, TSetting> $settings The pair of setting names and their values
+     * @returns array<string, TNormalizedSetting>
      */
-    abstract protected function insertMany(Collection|array $settings): void;
+    abstract protected function insertMany(array $settings): void;
 
     /**
      * Upsert many settings in the storage
@@ -204,13 +219,9 @@ abstract class BaseRepository implements Contracts\Repository
      * This function will upsert multiple settings in the storage based on the provided
      * pair of setting names and their values.
      *
-     * > Note:
-     * > The returned array contains the names of the settings as keys and a boolean as value
-     * > indicating whether the setting was created (true) or updated (false).
-     *
-     * @param Collection<string, TSetting>|array<string, TSetting> $settings The pair of setting names and their values
+     * @returns array<string, TNormalizedSetting>
      */
-    abstract protected function upsertMany(Collection|array $settings): void;
+    abstract protected function upsertMany(array $settings): void;
 
     /**
      * Delete many settings from the storage

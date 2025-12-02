@@ -11,28 +11,31 @@ use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Arr;
-use InvalidArgumentException;
 use ReflectionNamedType;
-
 use RuntimeException;
+
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
 class SettingsManager
 {
-    protected array $settingsFolders = [];
+    protected Repository $repository {
+        get {
+            return $this->repository;
+        }
+        set {
+            $this->repository = $value;
+        }
+    }
+    protected array $resolvedSettings = [];
 
-    protected static array $resolvedSettings = [];
+    protected array $resolvedNamespaces = [];
 
-    public function __construct(protected(set) ?Application $app = null)
+    public function __construct(protected ?Application $app = null)
     {
         $this->app ??= app();
-    }
 
-    public function setApplication(Application $app): void
-    {
-        $this->app = $app;
+        $this->repository = $this->app->make('settings.repository');
     }
 
     /**
@@ -41,10 +44,10 @@ class SettingsManager
     public function fake(array $data = [], string $group = AbstractSettings::DEFAULT_GROUP): void
     {
         $this->clearResolvedSettings();
-        $this->swapRepository(fn () => new InMemoryRepository($group));
+        $this->repository = new InMemoryRepository($group);
 
-        $this->app->bind(AbstractSettings::class."::$group", function () use ($data, $group) {
-            $repository = $this->app->make('settings.repository');
+        $this->app->bind($this->getSettingsGroupKey($group), function () use ($data, $group) {
+            $repository = $this->repository;
 
             return new #[AllowDynamicProperties] class ($repository, $group, $data) extends AbstractSettings {
                 public function __construct(protected Repository $repository, protected string $group, protected array $dynamicSettings)
@@ -132,42 +135,31 @@ class SettingsManager
     }
 
     /**
-     * Swap the settings repository implementation
-     */
-    public function swapRepository(callable $factory): void
-    {
-        $this->app->extend('settings.repository', $factory);
-    }
-
-    /**
      * Add a namespace and its corresponding path for Setting classes.
+     *
+     * @param string $namespace The namespace to register
+     * @throws RuntimeException if the given namespace the path cannot be resolved
      */
-    public function addNamespace(string $namespace, ?string $path = null): void
+    public function addNamespace(string $namespace): void
     {
-        $path = $path ?? psr4_namespace_to_path($namespace);
-
-        if (blank($path)) {
-            throw new InvalidArgumentException("Could not resolve path for namespace: $namespace");
+        if ($this->resolveNamespacePath($namespace)) {
+            return;
         }
 
-        $this->settingsFolders[trim($namespace, '\\')] = $path;
+        throw new RuntimeException("Could not resolve path for namespace: $namespace");
     }
 
     /**
      * Get the list of Setting classes.
      *
-     * @return class-string<Setting>[]
+     * @return class-string<AbstractSettings>[]
      */
     public function getClasses(): array
     {
         $classes = [];
 
-        if (blank(config('settings.classes'))) {
-            return $classes;
-        }
-
-        foreach (array_keys($this->settingsFolders) as $namespace) {
-            $resolvedClasses = $this->resolveNamespaceClasses($namespace);
+        foreach (array_keys($this->resolvedNamespaces) as $namespace) {
+            $resolvedClasses = $this->resolveNamespaceSettings($namespace);
 
             if (blank($resolvedClasses)) {
                 continue;
@@ -180,29 +172,81 @@ class SettingsManager
     }
 
     /**
-     * Resolve the Setting classes in a given namespace.
-     *
-     * @return ?class-string<Setting>[]
+     * Try to resolve the given namespace path
      */
-    protected function resolveNamespaceClasses(string $namespace): ?array
+    protected function resolveNamespacePath(string $namespace): ?string
     {
-        $directory = $this->settingsFolders[$namespace];
+        $namespace = trim($namespace, '\\');
 
-        $files = File::glob(
-            join_paths($directory, '*.php')
-        );
+        if (array_key_exists($namespace, $this->resolvedNamespaces)) {
+            return $this->resolvedNamespaces[$namespace];
+        }
 
-        if (empty($files)) {
+        if (blank($path = psr4_namespace_to_path($namespace))) {
             return null;
         }
 
-        $classes = Arr::map($files, function (string $file) use ($namespace): string {
-            $className = pathinfo($file, PATHINFO_FILENAME);
+        return $this->resolvedNamespaces[$namespace] = $path;
+    }
 
-            return "$namespace\\$className";
-        });
+    /**
+     * Resolve the Settings classes in a given namespace.
+     *
+     * @return ?class-string<AbstractSettings>[]
+     */
+    protected function resolveNamespaceSettings(string $namespace): ?array
+    {
+        $settings = $this->getNamespaceSettings($namespace);
 
-        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, AbstractSettings::class));
+        if (filled($settings)) {
+            collect($settings)
+                ->reject(fn (string $settings) => $this->app->bound($settings))
+                ->each(function (string $settings) {
+                    $key = $this->getSettingsGroupKey($settings);
+
+                    $this->ensureGroupIsUnique($key, $settings);
+
+                    $this->app->scoped($key, function () use ($settings) {
+                        $repository = $this->repository;
+
+                        return new $settings($repository);
+                    });
+                });
+
+            $this->resolvedSettings[$namespace] = array_merge(
+                $this->resolvedSettings[$namespace],
+                $settings
+            );
+        }
+
+        return $settings ?: null;
+    }
+
+    /**
+     * Get the classes inside the given namespace
+     *
+     * @return class-string<AbstractSettings>[]
+     */
+    protected function getNamespaceSettings(string $namespace): array
+    {
+        $path = $this->resolveNamespacePath($namespace);
+
+        if ($path === null) {
+            return [];
+        }
+
+        $files = File::glob(join_paths($path, '*.php')) ?: [];
+
+        return collect($files)
+            ->map(function (string $file) use ($namespace): string {
+                $className = pathinfo($file, PATHINFO_FILENAME);
+
+                return "$namespace\\$className";
+            })
+            ->reject(function (string $class): bool {
+                return ! is_subclass_of($class, AbstractSettings::class);
+            })
+            ->all();
     }
 
     /**
@@ -210,14 +254,8 @@ class SettingsManager
      */
     protected function getResolvedSettingsClass(string $key): ?AbstractSettings
     {
-        if ($settingsClass = static::$resolvedSettings[$key] ?? null) {
-            return $settingsClass;
-        }
-
         try {
             $settingsClass = $this->app->make($key);
-
-            static::$resolvedSettings[$key] = $settingsClass;
         } catch (BindingResolutionException) {
             $settingsClass = null;
         }
@@ -229,7 +267,6 @@ class SettingsManager
      * Get the setting group key for the given Setting class
      *
      * @param class-string<Setting>|string $class
-     * @return string
      *
      * @throws RuntimeException if the setting group is already declared
      */
@@ -248,14 +285,6 @@ class SettingsManager
     }
 
     /**
-     * Clear the resolved settings cache
-     */
-    public function clearResolvedSettings(): void
-    {
-        static::$resolvedSettings = [];
-    }
-
-    /**
      * Resolve the settings class with the given group if exists
      */
     public function resolveSettings(?string $group = null): ?AbstractSettings
@@ -265,5 +294,13 @@ class SettingsManager
         return $this->getResolvedSettingsClass(
             $this->getSettingsGroupKey($group)
         );
+    }
+
+    /**
+     * Clear the resolved settings cache
+     */
+    public function clearResolvedSettings(): void
+    {
+        $this->resolvedSettings = [];
     }
 }

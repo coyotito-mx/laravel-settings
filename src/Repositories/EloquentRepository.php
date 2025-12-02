@@ -30,7 +30,7 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function getSettings(?array $settings = null): Collection
     {
@@ -46,7 +46,7 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function updateMany(array|Collection $settings): void
     {
@@ -54,12 +54,10 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function insertMany(array|Collection $settings): void
     {
-        $settings = $settings instanceof Collection ? $settings->toArray() : $settings;
-
         $now = now();
         $records = [];
 
@@ -77,12 +75,10 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    protected function upsertMany(array|Collection $settings): void
+    protected function upsertMany(array $settings): void
     {
-        $settings = $settings instanceof Collection ? $settings->toArray() : $settings;
-
         $now = now();
         $records = [];
 
@@ -99,7 +95,7 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function deleteMany(array $settings): void
     {
@@ -107,7 +103,7 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function drop(): void
     {
@@ -115,7 +111,7 @@ class EloquentRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function renameGroup(string $newGroup): void
     {
@@ -124,6 +120,9 @@ class EloquentRepository extends BaseRepository
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected function castValue(mixed $value): PrepareValue
     {
         return new PrepareEloquentValue($value);

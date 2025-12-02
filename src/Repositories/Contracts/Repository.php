@@ -8,6 +8,8 @@ namespace Coyotito\LaravelSettings\Repositories\Contracts;
  *
  * Handles the processing of settings from a group of settings
  *
+ * @template TSettingParam of array<string, mixed|null>
+ *
  * @package Coyotito\SettingsManager
  */
 interface Repository
@@ -20,7 +22,7 @@ interface Repository
     /**
      * Get one or more settings
      *
-     * @return ($setting is string ? mixed : array<string, mixed>)
+     * @return ($setting is string ? mixed|null : array<string, mixed|null>)
      */
     public function get(string|array $setting, mixed $default = null): mixed;
 
@@ -33,21 +35,47 @@ interface Repository
 
     /**
      * Update one or more settings
+     *
+     * If the `$setting` is a `string`, this will be the name of the setting to update using the provided, or not, the
+     * argument `$value`. When `$setting` is an `array`, and this is a list, all the settings provided will be updated using
+     * the argument `$value` as for every single setting provided in the list. Otherwise, the assoc `$setting` will contain every value
+     * to update for each setting.
+     *
+     * @param string|string[]|TSettingParam[] $setting The settings to update|create
+     * @param mixed $value The value to update|create
      */
     public function update(string|array $setting, mixed $value = null): void;
 
     /**
      * Insert one or more setting
+     *
+     * If the `$setting` is a `string`, this will be the name of the setting to create using the provided, or not, the
+     * argument `$value`. When `$setting` is an `array`, and this is a list, all the settings provided will be created using
+     * the argument `$value` as for every single setting provided in the list. Otherwise, the assoc `$setting` will contain every value
+     * to create for each setting.
+     *
+     * @param string|string[]|TSettingParam[] $setting The settings to update|create
+     * @param mixed $value The value to update|create
      */
     public function insert(string|array $setting, mixed $value = null): void;
 
     /**
      * Insert or update one or more settings
+     *
+     * If the `$setting` is a `string`, this will be the name of the setting to create|update using the provided, or not, the
+     * argument `$value`. When `$setting` is an `array`, and this is a list, all the settings provided will be created|updated using
+     * the argument `$value` as for every single setting provided in the list. Otherwise, the assoc `$setting` will contain every value
+     * to create|update for each setting.
+     *
+     * @param string|string[]|TSettingParam[] $setting The settings to update|create
+     * @param mixed $value The value to update|create
      */
     public function upsert(string|array $setting, mixed $value = null): void;
 
     /**
      * Delete one or more settings
+     *
+     * @param string|string[] $setting
      */
     public function delete(string|array $setting): void;
 

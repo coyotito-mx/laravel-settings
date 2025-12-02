@@ -25,7 +25,7 @@ final class InMemoryRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function getSettings(?array $settings = null): Collection
     {
@@ -41,30 +41,26 @@ final class InMemoryRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    protected function updateMany(array|Collection $settings): void
+    protected function updateMany(array $settings): void
     {
         $this->upsertMany($settings);
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    protected function insertMany(array|Collection $settings): void
+    protected function insertMany(array $settings): void
     {
         $this->upsertMany($settings);
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    protected function upsertMany(array|Collection $settings): void
+    protected function upsertMany(array $settings): void
     {
-        if (blank($settings)) {
-            return;
-        }
-
         $now = now();
 
         foreach ($settings as $name => $data) {
@@ -91,7 +87,7 @@ final class InMemoryRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function deleteMany(array $settings): void
     {
@@ -99,7 +95,7 @@ final class InMemoryRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function drop(): void
     {
@@ -110,7 +106,7 @@ final class InMemoryRepository extends BaseRepository
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function renameGroup(string $newGroup): void
     {
@@ -121,6 +117,9 @@ final class InMemoryRepository extends BaseRepository
             ->put($this->group = $newGroup, $settings);
     }
 
+    /**
+     * Access the internal storage
+     */
     protected function storage(): Collection
     {
         /** @var ?Collection $group */

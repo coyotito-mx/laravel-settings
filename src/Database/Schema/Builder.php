@@ -48,7 +48,7 @@ final class Builder
      */
     public function delete(string|array $settings): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(self::DEFAULT_GROUP));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = self::DEFAULT_GROUP);
         $blueprint = new Blueprint($repo);
 
         if (is_string($settings)) {
@@ -65,7 +65,7 @@ final class Builder
      */
     public function drop(string $group): void
     {
-        tap($this->repo, fn ($repo) => $repo->setGroup($group))->drop();
+        tap($this->repo, fn ($repo) => $repo->group = $group)->drop();
     }
 
     /**
@@ -73,7 +73,7 @@ final class Builder
      */
     public function rename(string $oldGroup, string $newGroup): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup($oldGroup));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = $oldGroup);
 
         $repo->renameGroup($newGroup);
     }

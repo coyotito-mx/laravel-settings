@@ -8,7 +8,6 @@ use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
-use Coyotito\LaravelSettings\Models\Setting;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
@@ -140,22 +139,6 @@ class SettingsServiceProvider extends ServiceProvider
     {
         Facades\SettingsManager::clearResolvedSettings();
 
-        $classes = Facades\SettingsManager::getClasses();
-
-        foreach ($classes as $class) {
-            /** @var class-string<Setting> $keyClass */
-            $group = $class::getGroup();
-            $keyClass = Facades\SettingsManager::getSettingsGroupKey($group);
-
-            Facades\SettingsManager::ensureGroupIsUnique($keyClass, $group);
-
-            $this->app->scoped($class, function () use ($class) {
-                $repository = $this->app->make('settings.repository');
-
-                return new $class($repository);
-            });
-
-            $this->app->alias($class, $keyClass);
-        }
+        Facades\SettingsManager::getClasses();
     }
 }

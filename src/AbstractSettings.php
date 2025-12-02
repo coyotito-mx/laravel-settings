@@ -46,7 +46,7 @@ abstract class AbstractSettings
         $properties = array_keys($this->getCachedPropertyNames());
 
         $this->fill(
-            $this->repository->get($properties) ?? []
+            $this->repository->get($properties)
         );
     }
 

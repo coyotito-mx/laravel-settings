@@ -134,7 +134,8 @@ it('can create settings for a custom group', function () {
         ->and($classFile)
         ->toBeFile()
         ->and(File::get($classFile))
-        ->toBe(<<<'PHP'
+        ->toBe(
+            <<<'PHP'
         <?php
 
         declare(strict_types=1);
