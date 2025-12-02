@@ -77,7 +77,7 @@ describe('psr4 namespace to path helper', function () {
 describe('settings helper', function () {
     it('returns settings manager instance', function () {
         expect(settings())
-            ->toBeInstanceOf(Coyotito\LaravelSettings\SettingsManager::class);
+            ->toBeInstanceOf(Coyotito\LaravelSettings\Settings::class);
     });
 
     it('treats settings(setting) as get, not set', function () {

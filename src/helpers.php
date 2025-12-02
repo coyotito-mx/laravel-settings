@@ -3,7 +3,7 @@
 namespace Coyotito\LaravelSettings\Helpers
 {
 
-    use Coyotito\LaravelSettings\SettingsManager;
+    use Coyotito\LaravelSettings\Settings;
     use Illuminate\Support\Collection;
     use Illuminate\Support\Facades\File;
     use Illuminate\Support\Str;
@@ -67,7 +67,7 @@ namespace Coyotito\LaravelSettings\Helpers
      */
     function settings(null|string|array $setting = null, mixed $default = null)
     {
-        $manager = new SettingsManager();
+        $manager = new Settings();
 
         // If no arguments, return the manager instance
         if ($setting === null) {
