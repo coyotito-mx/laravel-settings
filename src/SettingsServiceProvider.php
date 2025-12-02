@@ -12,6 +12,7 @@ use Coyotito\LaravelSettings\Models\Setting;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
+use File;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,25 +20,41 @@ use function Coyotito\LaravelSettings\Helpers\package_path;
 
 class SettingsServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
-        $this->mergeConfigFrom(
-            package_path('config', 'settings.php'),
-            'settings',
-        );
+        $this->publishConfig();
 
-        $this->app->singleton('settings.manager', function (Application $app): SettingsManager {
-            return new SettingsManager($app);
-        });
+        $this->registerBindings();
+    }
 
-        $this->app->bind(Repository::class, function (): Repository {
-            $repo = config('settings.repository');
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        $this->publishMigrations();
 
-            return $this->app->make("repository.$repo");
-        });
+        $this->addCommands([
+            MakeSettingsCommand::class,
+            MakeSettingsClassCommand::class,
+            MakeSettingsMigrationCommand::class,
+        ]);
 
-        $this->app->alias(Repository::class, 'settings.repository');
+        $this->bindSettingClasses();
 
+        $rootNamespace = trim($this->app->getNamespace(), '\\');
+
+        Facades\SettingsManager::addNamespace("$rootNamespace\\Settings");
+    }
+
+    /**
+     * Register the package bindings.
+     */
+    protected function registerBindings(): void
+    {
         $this->app->bind('repository.eloquent', function (): EloquentRepository {
             $model = config('settings.repositories.eloquent.model');
 
@@ -54,38 +71,69 @@ class SettingsServiceProvider extends ServiceProvider
             return new Builder($repo);
         });
 
-        $rootNamespace = trim($this->app->getNamespace(), '\\');
+        $this->app->bind(Repository::class, function (): Repository {
+            $repo = config('settings.repository');
 
-        Facades\SettingsManager::addNamespace("$rootNamespace\\Settings");
+            return $this->app->make("repository.$repo");
+        });
+
+        $this->app->alias(Repository::class, 'settings.repository');
+
+        $this->app->singleton('settings.manager', function (Application $app): SettingsManager {
+            return new SettingsManager($app);
+        });
     }
 
-    public function boot(): void
+    /**
+     * Add commands to the application.
+     *
+     * This commands will only be registered if the application is running in the console.
+     */
+    protected function addCommands(array $commands = []): void
     {
-        // Publish config file
-        $this->publishes([
-            package_path('config', 'settings.php') => config_path('settings.php'),
-        ], 'laravel-settings-config');
+        if ($this->app->runningInConsole()) {
+            $this->commands($commands);
+        }
+    }
 
+    /**
+     * Publish the package configuration files.
+     */
+    protected function publishConfig(): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $files = File::glob(package_path('config', '*.php'));
+
+        if (blank($files)) {
+            return;
+        }
+
+        collect($files)->each(function (string $filepath): void {
+            $filename = basename($filepath);
+
+            $this->mergeConfigFrom($filepath, basename($filename, '.php'));
+
+            $this->publishes([
+                $filepath => config_path($filename),
+            ], 'laravel-settings-config');
+        });
+    }
+
+    protected function publishMigrations(): void
+    {
         $migrationFilename = 'eloquent_repository_migration.php';
 
         $this->publishesMigrations([
             package_path('database', 'migrations', $migrationFilename) => database_path(
                 implode(DIRECTORY_SEPARATOR, [
                     'migrations',
-                    now()->format('y_m_d_his_') . $migrationFilename,
+                    now()->format('Y_m_d_His_') . 'create_settings_table.php',
                 ]),
             ),
         ], 'laravel-settings-migrations');
-
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                MakeSettingsCommand::class,
-                MakeSettingsClassCommand::class,
-                MakeSettingsMigrationCommand::class,
-            ]);
-        }
-
-        $this->bindSettingClasses();
     }
 
     public function bindSettingClasses(): void
