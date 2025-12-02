@@ -8,9 +8,11 @@ use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
+use Coyotito\LaravelSettings\Models\Setting;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Coyotito\LaravelSettings\Facades\LaravelSettings;
 
@@ -25,8 +27,8 @@ class SettingsServiceProvider extends ServiceProvider
             'settings',
         );
 
-        $this->app->singleton('settings.manager', function (): LaravelSettingsManager {
-            return new LaravelSettingsManager();
+        $this->app->singleton('settings.manager', function (Application $app): LaravelSettingsManager {
+            return new LaravelSettingsManager($app);
         });
 
         $this->app->bind(Repository::class, function (): Repository {
@@ -89,14 +91,24 @@ class SettingsServiceProvider extends ServiceProvider
 
     public function bindSettingClasses(): void
     {
+        LaravelSettings::clearResolvedSettings();
+
         $classes = LaravelSettings::getClasses();
 
         foreach ($classes as $class) {
+            /** @var class-string<Setting> $keyClass */
+            $group = $class::getGroup();
+            $keyClass = LaravelSettings::getSettingsGroupKey($group);
+
+            LaravelSettings::ensureGroupIsUnique($keyClass, $group);
+
             $this->app->scoped($class, function () use ($class) {
                 $repository = $this->app->make('settings.repository');
 
                 return new $class($repository);
             });
+
+            $this->app->alias($class, $keyClass);
         }
     }
 }

@@ -24,7 +24,7 @@ final class Builder
      */
     public function in(string $group, \Closure $callback): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup($group));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = $group);
         $blueprint = new Blueprint($repo);
 
         $callback($blueprint);
@@ -37,7 +37,7 @@ final class Builder
      */
     public function default(\Closure $callback): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(self::DEFAULT_GROUP));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = self::DEFAULT_GROUP);
         $blueprint = new Blueprint($repo);
 
         $callback($blueprint);

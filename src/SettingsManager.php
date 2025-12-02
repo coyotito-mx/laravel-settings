@@ -4,46 +4,62 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
-use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use Illuminate\Support\Arr;
+use RuntimeException;
 
 final class SettingsManager
 {
-    public function __construct(protected ?Repository $repository = null)
+    public function __construct(protected ?LaravelSettingsManager $manager = null, protected string $group = Settings::DEFAULT_GROUP)
     {
-        if (is_null($this->repository)) {
-            $this->repository = app(Repository::class);
-        }
-
-        $this->setGroup(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
+        $this->manager ??= app(LaravelSettingsManager::class);
     }
 
     public function get(string|array $key, mixed $default = null): mixed
     {
         if (is_null($default)) {
-            return $this->repository->get($key);
+            return $this->settings()->get($key);
         }
 
-        return $this->repository->get($key, $default);
+        return $this->settings()->get($key, $default);
     }
 
     public function set(string|array $values, mixed $default = null): self
     {
-        if (is_null($default)) {
-            $this->repository->upsert($values);
+        if (is_string($values)) {
+            $settings = [$values => $default];
         } else {
-            $this->repository->upsert($values, $default);
+            $settings = Arr::mapWithKeys(
+                $values,
+                function (mixed $value, int|string $key) use ($default) {
+                    if (is_int($key)) {
+                        [$key, $value] = [$value, $default];
+                    }
+
+                    return [
+                        $key => $value,
+                    ];
+                }
+            );
         }
+
+        $this->settings()->fill($settings)->save();
 
         return $this;
     }
 
     public function group(string $group): self
     {
-        return tap(new self($this->repository), fn (self $manager) => $manager->setGroup($group));
+        return new self($this->manager, $group);
     }
 
-    protected function setGroup(string $group): void
+    protected function settings(): Settings
     {
-        $this->repository->setGroup($group);
+        $settings = $this->manager->resolveSettings($this->group);
+
+        if (blank($settings)) {
+            throw new RuntimeException("Settings group [$this->group] not found.");
+        }
+
+        return $settings;
     }
 }

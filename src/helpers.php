@@ -4,6 +4,7 @@ namespace Coyotito\LaravelSettings\Helpers
 {
 
     use Coyotito\LaravelSettings\SettingsManager;
+    use Illuminate\Support\Collection;
     use Illuminate\Support\Facades\File;
     use Illuminate\Support\Str;
 
@@ -37,23 +38,24 @@ namespace Coyotito\LaravelSettings\Helpers
      */
     function psr4_namespace_to_path(string $namespace): ?string
     {
-        $composer = File::json(base_path('composer.json'));
+        $namespaces = (function (): Collection {
+            $autoloadFile = 'vendor/composer/autoload_psr4.php';
 
-        if (! data_has($composer, 'autoload.psr-4')) {
-            return null;
-        }
+            $composerPath = app()->runningUnitTests()
+                ? package_path($autoloadFile)
+                : base_path($autoloadFile);
 
-        foreach (data_get($composer, 'autoload.psr-4') as $prefix => $path) {
+            return collect(File::getRequire($composerPath))->map(fn (array $path): string => $path[0]);
+        })();
+
+        foreach ($namespaces as $prefix => $path) {
             $path = rtrim($path, '/\\');
 
             if (str_starts_with($namespace, rtrim($prefix, '\\'))) {
                 $remaining = Str::after($namespace, rtrim($prefix, '\\'));
                 $segments = $remaining === '' ? [] : array_filter(explode('\\', $remaining), filled(...));
 
-                return join_paths(
-                    base_path($path),
-                    ...$segments
-                );
+                return join_paths($path, ...$segments);
             }
         }
 

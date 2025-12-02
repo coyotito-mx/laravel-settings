@@ -1,7 +1,6 @@
 <?php
 
-use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use Mockery\LegacyMockInterface;
+use Coyotito\LaravelSettings\Facades\LaravelSettings;
 use Orchestra\Testbench;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
@@ -21,86 +20,79 @@ dataset('paths', [
     'README.md',
 ]);
 
-test('package path', function (string $path) {
-    expect(package_path($path))
-        ->toBe(Testbench\package_path($path))
-        ->toBeFile();
-})->with('paths');
+describe('package path helper', function () {
+    it('resolve package path', function (string $path) {
+        expect(package_path($path))
+            ->toBe(Testbench\package_path($path))
+            ->toBeFile();
+    })->with('paths');
 
-it('converts psr-4 namespace to path', function () {
-    File::partialMock()
-        ->shouldReceive('json')
-        ->with(base_path('composer.json'))
-        ->andReturn([
-            'autoload' => [
-                'psr-4' => [
-                    'App\\' => 'app/',
-                    'Custom\\Settings\\' => 'app/Settings/',
-                ],
-            ],
-        ]);
+    it('join multiple segments to the package path', function () {
+        expect(package_path('src', 'Settings', 'Settings.php'))
+            ->toBe(Testbench\package_path('src', 'Settings', 'Settings.php'));
+    });
 
-    expect(psr4_namespace_to_path('App\\Models'))
-        ->toBe(app_path('Models'))
-        ->and(psr4_namespace_to_path('Custom\\Settings\\Config'))
-        ->toBe(app_path('Settings/Config'));
+    it('handle empty segments', function () {
+        expect(package_path('', 'src', '', 'Settings', '', 'Settings.php', ''))
+            ->toBe(Testbench\package_path('src', 'Settings', 'Settings.php'));
+    });
 });
 
-it('returns null for non-matching namespace', function () {
-    File::partialMock()
-        ->shouldReceive('json')
-        ->with(base_path('composer.json'))
-        ->andReturn([
-            'autoload' => [
-                'psr-4' => [
-                    'App\\' => 'app/',
-                ],
-            ],
+describe('psr4 namespace to path helper', function () {
+    function psr4_namespaces(array $namespaces = []): void
+    {
+        File::partialMock()
+            ->shouldReceive('getRequire')
+            ->andReturn($namespaces);
+    }
+
+    it('resolves root namespace to path', function () {
+        psr4_namespaces([
+            'Coyotito\\LaravelSettings' => [package_path('src')],
         ]);
 
-    expect(psr4_namespace_to_path('NonExistent\\Namespace'))
-        ->toBeNull();
+        expect(psr4_namespace_to_path('Coyotito\\LaravelSettings'))
+            ->toBe(Testbench\package_path('src'));
+    });
+
+    it('resolves sub-namespace to path', function () {
+        psr4_namespaces([
+            'Coyotito\\LaravelSettings' => [package_path('src')],
+        ]);
+
+        expect(psr4_namespace_to_path('Coyotito\\LaravelSettings\Helpers'))
+            ->toBe(package_path('src', 'Helpers'));
+    });
+
+    it('returns null for non-existent namespace', function () {
+        psr4_namespaces([
+            'Coyotito\\LaravelSettings' => [package_path('src')],
+        ]);
+
+        expect(psr4_namespace_to_path('NonExistent\Namespace'))
+            ->toBeNull();
+    });
 });
 
 describe('settings helper', function () {
-    beforeEach(function () {
-        app()->bind(Repository::class, function () {
-            $mock = $this->mock(Repository::class)->makePartial();
-
-            $mock->shouldReceive('setGroup')
-                ->with(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)
-                ->andReturn();
-
-            return $mock;
-        });
-
-        /**
-         * @var Repository&LegacyMockInterface $this->repo
-         */
-        $this->repo = app(Repository::class);
-    });
-
     it('returns settings manager instance', function () {
         expect(settings())
             ->toBeInstanceOf(Coyotito\LaravelSettings\SettingsManager::class);
     });
 
     it('treats settings(setting) as get, not set', function () {
-        $this->repo->shouldReceive('get')
-            ->with('key')
-            ->andReturn('value');
+        LaravelSettings::fake([
+            'key' => 'value',
+        ]);
 
         expect(settings('key'))
             ->toBe('value');
     });
 
     it('treats settings(setting, default) as get with default, not set', function () {
-        $this->repo->shouldReceive('get')
-            ->with('non_existent_key', 'default_value')
-            ->andReturn('default_value')
-            ->shouldReceive('get')
-            ->with('key', 'default_value')
-            ->andReturn('value');
+        LaravelSettings::fake([
+            'key' => 'value',
+        ]);
 
         expect(settings('non_existent_key', 'default_value'))
             ->toBe('default_value')
@@ -109,30 +101,29 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string>) as get, not set', function () {
-        $this->repo->shouldReceive('get')
-            ->with(['key1', 'key2'])
-            ->andReturn(['key1' => 'value1', 'key2' => 'value2']);
+        LaravelSettings::fake([
+            'key1' => 'value1',
+            'key2' => 'value2',
+        ]);
 
         expect(settings(['key1', 'key2']))
             ->toBe(['key1' => 'value1', 'key2' => 'value2']);
     });
 
     it('treats settings(array<string>, default) as get, not set', function () {
-        $this->repo->shouldReceive('get')
-            ->with(['key1', 'key2'])
-            ->andReturn(['key1' => 'value1', 'key2' => null]);
+        LaravelSettings::fake([
+            'key1' => 'value1',
+        ]);
 
         expect(settings(['key1', 'key2']))
             ->toBe(['key1' => 'value1', 'key2' => null]);
     });
 
     it('treats settings(array<string, mixed>) as set, not get', function () {
-        $this->repo->shouldReceive('upsert')
-            ->with(['key1' => 'value1', 'key2' => 'value2'])
-            ->andReturn()
-            ->shouldReceive('get')
-            ->with(['key1', 'key2'])
-            ->andReturn(['key1' => 'value1', 'key2' => 'value2']);
+        LaravelSettings::fake([
+            'key1' => 'old_value1',
+            'key2' => 'old_value2',
+        ]);
 
         settings(['key1' => 'value1', 'key2' => 'value2']);
 
@@ -141,12 +132,10 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting, array<string, mixed>) as set in group, not get', function () {
-        $this->repo->shouldReceive('setGroup')
-            ->andReturn()
-            ->shouldReceive('upsert')
-            ->andReturn()
-            ->shouldReceive('get')
-            ->andReturn(['key1' => 'value1', 'key2' => 'value2']);
+        LaravelSettings::fake([
+            'key1' => 'old_value1',
+            'key2' => 'old_value2',
+        ], 'group');
 
         settings('group', ['key1' => 'value1', 'key2' => 'value2']);
 
