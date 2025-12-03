@@ -1,8 +1,7 @@
 <?php
 
-use Coyotito\LaravelSettings\Facades\SettingsManager;
+use Coyotito\LaravelSettings\Facades\Settings;
 use Orchestra\Testbench;
-
 use function Coyotito\LaravelSettings\Helpers\package_path;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Coyotito\LaravelSettings\Helpers\settings;
@@ -81,7 +80,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting) as get, not set', function () {
-        SettingsManager::fake([
+        Settings::fake([
             'key' => 'value',
         ]);
 
@@ -90,7 +89,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting, default) as get with default, not set', function () {
-        SettingsManager::fake([
+        Settings::fake([
             'key' => 'value',
         ]);
 
@@ -101,7 +100,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string>) as get, not set', function () {
-        SettingsManager::fake([
+        Settings::fake([
             'key1' => 'value1',
             'key2' => 'value2',
         ]);
@@ -111,7 +110,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string>, default) as get, not set', function () {
-        SettingsManager::fake([
+        Settings::fake([
             'key1' => 'value1',
         ]);
 
@@ -120,7 +119,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(array<string, mixed>) as set, not get', function () {
-        SettingsManager::fake([
+        Settings::fake([
             'key1' => 'old_value1',
             'key2' => 'old_value2',
         ]);
@@ -132,7 +131,7 @@ describe('settings helper', function () {
     });
 
     it('treats settings(setting, array<string, mixed>) as set in group, not get', function () {
-        SettingsManager::fake([
+        Settings::fake([
             'key1' => 'old_value1',
             'key2' => 'old_value2',
         ], 'group');

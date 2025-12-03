@@ -27,25 +27,6 @@ class SettingsManager
     }
 
     /**
-     * Fake a settings class with the given data for testing purposes
-     */
-    public function fake(array $data = [], string $group = AbstractSettings::DEFAULT_GROUP): void
-    {
-        $this->clearRegisteredSettings();
-
-        $this->app->forgetInstance(Repository::class);
-        $this->app->scoped(
-            Repository::class,
-            fn () => tap(
-                new InMemoryRepository($group),
-                fn ($repo) => $repo->insert($data)
-            )
-        );
-
-        $this->bindSettingsClass(DynamicSettings::class, $group);
-    }
-
-    /**
      * Add a namespace and its corresponding path for Setting classes.
      */
     public function addNamespace(string $namespace, ?string $path = null): void
@@ -100,9 +81,9 @@ class SettingsManager
      *
      * @param class-string<AbstractSettings> $settings
      */
-    protected function registerSettingsClass(string $settings): void
+    public function registerSettingsClass(string $settings, ?string $group = null): void
     {
-        $this->bindSettingsClass($settings);
+        $this->bindSettingsClass($settings, $group);
 
         if (method_exists($settings, 'preload') && $settings::preload()) {
             $this->preloadSettingsClass($settings);
