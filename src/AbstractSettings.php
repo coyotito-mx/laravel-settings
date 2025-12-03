@@ -39,7 +39,7 @@ abstract class AbstractSettings
      */
     public const string DEFAULT_GROUP = 'default';
 
-    public function __construct(protected Repository $repository, protected string $group = self::DEFAULT_GROUP)
+    public function __construct(protected Repository $repository, public string $group = self::DEFAULT_GROUP)
     {
         $this->repository->group = $this->group;
 

@@ -4,36 +4,26 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
-use AllowDynamicProperties;
-use Coyotito\LaravelSettings\Models\Setting;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Contracts\Foundation\Application;
+use Coyotito\LaravelSettings\Settings\DynamicSettings;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\File;
-use ReflectionNamedType;
-use RuntimeException;
+use Illuminate\Support\Arr;
+use InvalidArgumentException;
 
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
 class SettingsManager
 {
-    protected Repository $repository {
-        get {
-            return $this->repository;
-        }
-        set {
-            $this->repository = $value;
-        }
-    }
-    protected array $resolvedSettings = [];
+    protected array $namespaces = [];
 
-    protected array $resolvedNamespaces = [];
+    protected array $registeredSettings = [];
 
-    public function __construct(protected ?Application $app)
+    public function __construct(protected(set) Application $app)
     {
-        $this->repository = $this->app->make('settings.repository');
+        //
     }
 
     /**
@@ -41,264 +31,170 @@ class SettingsManager
      */
     public function fake(array $data = [], string $group = AbstractSettings::DEFAULT_GROUP): void
     {
-        $this->clearResolvedSettings();
-        $this->repository = new InMemoryRepository($group);
+        $this->clearRegisteredSettings();
 
-        $this->app->bind($this->getSettingsGroupKey($group), function () use ($data, $group) {
-            $repository = $this->repository;
+        $this->app->forgetInstance(Repository::class);
+        $this->app->scoped(
+            Repository::class,
+            fn () => tap(
+                new InMemoryRepository($group),
+                fn ($repo) => $repo->insert($data)
+            )
+        );
 
-            return new #[AllowDynamicProperties] class ($repository, $group, $data) extends AbstractSettings {
-                public function __construct(protected Repository $repository, protected string $group, protected array $dynamicSettings)
-                {
-                    $this->setDynamicSettings($this->dynamicSettings);
-
-                    parent::__construct($repository, $group);
-                }
-
-                protected function resolvePublicProperties(): array
-                {
-                    return collect(get_object_vars($this))
-                        ->only(array_keys($this->dynamicSettings))
-                        ->mapWithKeys(function (mixed $value, string $property): array {
-                            $type = new class ($value) extends ReflectionNamedType {
-                                private const array BUILTIN_TYPES = [
-                                    'integer',
-                                    'double',
-                                    'string',
-                                    'boolean',
-                                    'array',
-                                    'object',
-                                    'callable',
-                                    'iterable',
-                                    'null',
-                                    'void',
-                                    'never',
-                                    'mixed',
-                                    'false',
-                                    'true',
-                                ];
-
-                                public function __construct(protected mixed $value)
-                                {
-                                    //
-                                }
-
-                                public function getName(): string
-                                {
-                                    return gettype($this->value);
-                                }
-
-                                public function isBuiltin(): bool
-                                {
-                                    return self::BUILTIN_TYPES[$this->getName()] ?? false;
-                                }
-
-                                public function allowsNull(): bool
-                                {
-                                    return true;
-                                }
-
-                                public function __toString(): string
-                                {
-                                    return $this->getName();
-                                }
-                            };
-
-                            return [$property => $type];
-                        })->toArray();
-                }
-
-                private function setDynamicSettings(array $settings): void
-                {
-                    $this->repository->insert(
-                        $this->prepareSettings($settings)
-                    );
-
-                    foreach ($settings as $key => $value) {
-                        $this->set($key, $value);
-                    }
-                }
-
-                private function set(string $key, $value): void
-                {
-                    $this->$key = $value;
-                }
-
-                private function prepareSettings(array $settings): array
-                {
-                    return array_map(fn ($payload) => $payload, $settings);
-                }
-            };
-        });
+        $this->bindSettingsClass(DynamicSettings::class, $group);
     }
 
     /**
      * Add a namespace and its corresponding path for Setting classes.
-     *
-     * @param string $namespace The namespace to register
-     * @throws RuntimeException if the given namespace the path cannot be resolved
      */
-    public function addNamespace(string $namespace): void
+    public function addNamespace(string $namespace, ?string $path = null): void
     {
-        if ($this->resolveNamespacePath($namespace)) {
+        if (isset($this->namespaces[$namespace])) {
             return;
         }
 
-        throw new RuntimeException("Could not resolve path for namespace: $namespace");
+        $settingsClasses = $this->getSettingsClasses($namespace, $path);
+
+        if (blank($settingsClasses)) {
+            return;
+        }
+
+        $this->namespaces[$namespace] = $settingsClasses;
+
+        foreach ($settingsClasses as $settings) {
+            $this->registerSettingsClass($settings);
+        }
     }
 
     /**
-     * Get the list of Setting classes.
-     *
-     * @return class-string<AbstractSettings>[]
-     */
-    public function getClasses(): array
-    {
-        $classes = [];
-
-        foreach (array_keys($this->resolvedNamespaces) as $namespace) {
-            $resolvedClasses = $this->resolveNamespaceSettings($namespace);
-
-            if (blank($resolvedClasses)) {
-                continue;
-            }
-
-            $classes = [...$resolvedClasses, ...$classes];
-        }
-
-        return $classes;
-    }
-
-    /**
-     * Try to resolve the given namespace path
-     */
-    protected function resolveNamespacePath(string $namespace): ?string
-    {
-        $namespace = trim($namespace, '\\');
-
-        if (array_key_exists($namespace, $this->resolvedNamespaces)) {
-            return $this->resolvedNamespaces[$namespace];
-        }
-
-        if (blank($path = psr4_namespace_to_path($namespace))) {
-            return null;
-        }
-
-        return $this->resolvedNamespaces[$namespace] = $path;
-    }
-
-    /**
-     * Resolve the Settings classes in a given namespace.
+     * Resolve the Setting classes in a given namespace.
      *
      * @return ?class-string<AbstractSettings>[]
      */
-    protected function resolveNamespaceSettings(string $namespace): ?array
+    protected function getSettingsClasses(string $namespace, ?string $path): ?array
     {
-        $settings = $this->getNamespaceSettings($namespace);
+        $path = $path ?? psr4_namespace_to_path($namespace);
 
-        if (filled($settings)) {
-            collect($settings)
-                ->reject(fn (string $settings) => $this->app->bound($settings))
-                ->each(function (string $settings) {
-                    $key = $this->getSettingsGroupKey($settings);
-
-                    $this->ensureGroupIsUnique($key, $settings);
-
-                    $this->app->scoped($key, function () use ($settings) {
-                        $repository = $this->repository;
-
-                        return new $settings($repository);
-                    });
-                });
-
-            $this->resolvedSettings[$namespace] = array_merge(
-                $this->resolvedSettings[$namespace],
-                $settings
-            );
+        if (blank($path)) {
+            throw new InvalidArgumentException("Could not resolve path for namespace: $namespace");
         }
 
-        return $settings ?: null;
+        $files = File::glob(join_paths($path, '*.php'));
+
+        if (blank($files)) {
+            return null;
+        }
+
+        $classes = Arr::map($files, function (string $file) use ($namespace): string {
+            $className = pathinfo($file, PATHINFO_FILENAME);
+
+            return "$namespace\\$className";
+        });
+
+        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, AbstractSettings::class));
     }
 
     /**
-     * Get the classes inside the given namespace
+     * Register a Setting class in the container.
      *
-     * @return class-string<AbstractSettings>[]
+     * @param class-string<AbstractSettings> $settings
      */
-    protected function getNamespaceSettings(string $namespace): array
+    protected function registerSettingsClass(string $settings): void
     {
-        $path = $this->resolveNamespacePath($namespace);
+        $this->bindSettingsClass($settings);
 
-        if ($path === null) {
-            return [];
+        if (method_exists($settings, 'preload') && $settings::preload()) {
+            $this->preloadSettingsClass($settings);
         }
-
-        $files = File::glob(join_paths($path, '*.php')) ?: [];
-
-        return collect($files)
-            ->map(function (string $file) use ($namespace): string {
-                $className = pathinfo($file, PATHINFO_FILENAME);
-
-                return "$namespace\\$className";
-            })
-            ->reject(function (string $class): bool {
-                return ! is_subclass_of($class, AbstractSettings::class);
-            })
-            ->all();
     }
 
     /**
-     * Get the resolved settings class
+     * Bind the settings class to the container
      */
-    protected function getResolvedSettingsClass(string $key): ?AbstractSettings
+    protected function bindSettingsClass(string $settings, ?string $group = null): void
     {
-        try {
-            $settingsClass = $this->app->make($key);
-        } catch (BindingResolutionException) {
-            $settingsClass = null;
+        if (blank($group)) {
+            $group = $this->resolveGroupName($settings);
         }
 
-        return $settingsClass;
+        $this->ensureUniqueGroupRegistration($settings);
+
+        $this->registeredSettings[$group] = $settings;
+
+        $this->app->scoped($settings, static function ($app) use ($settings, $group): AbstractSettings {
+            $repository = $app->make('settings.repository');
+
+            /** @var AbstractSettings $instance */
+            $instance = new $settings($repository);
+
+            if (filled($instance)) {
+                $instance->group = $group;
+            }
+
+            return $instance;
+        });
+
+        $this->app->alias($settings, $group);
     }
 
     /**
-     * Get the setting group key for the given Setting class
+     * Preload the settings class if needed
+     */
+    protected function preloadSettingsClass(string|AbstractSettings $settings): void
+    {
+        $this->app->make($settings);
+    }
+
+    /**
+     * Resolve the settings instance from the given group
+     */
+    public function resolveSettings(string $group): ?AbstractSettings
+    {
+        $settings = $this->registeredSettings[$group] ?? null;
+
+        if (blank($settings)) {
+            return null;
+        }
+
+        return $this->app->make($settings);
+    }
+
+    protected function ensureUniqueGroupRegistration(string $settings): void
+    {
+        $group = $this->resolveGroupName($settings);
+
+        if (! $this->app->has($group)) {
+            return;
+        }
+
+        $existingSettings = $this->registeredSettings[$group];
+
+        throw new InvalidArgumentException(sprintf(
+            'Settings group "%s" is already registered by class "%s". Cannot register class "%s" with the same group.',
+            $existingSettings::getGroup(),
+            $existingSettings::class,
+            $settings,
+        ));
+    }
+
+    /**
+     * Resolve the settings group key for the given settings class
      *
-     * @param class-string<Setting>|string $class
-     *
-     * @throws RuntimeException if the setting group is already declared
+     * @param class-string<AbstractSettings> $settings
      */
-    public function getSettingsGroupKey(string $class): string
+    public function resolveGroupName(string $settings): string
     {
-        $group = is_subclass_of($class, AbstractSettings::class) ? $class::getGroup() : $class;
-
-        return sprintf("%s::%s", AbstractSettings::class, $group);
-    }
-
-    public function ensureGroupIsUnique(string $key, string $group): void
-    {
-        if ($this->app->resolved($key)) {
-            throw new RuntimeException("Cannot declare two settings with the same group [{$group}]");
-        }
-    }
-
-    /**
-     * Resolve the settings class with the given group if exists
-     */
-    public function resolveSettings(?string $group = null): ?AbstractSettings
-    {
-        $group ??= AbstractSettings::DEFAULT_GROUP;
-
-        return $this->getResolvedSettingsClass(
-            $this->getSettingsGroupKey($group)
-        );
+        return $settings::getGroup();
     }
 
     /**
      * Clear the resolved settings cache
      */
-    public function clearResolvedSettings(): void
+    public function clearRegisteredSettings(): void
     {
-        $this->resolvedSettings = [];
+        foreach ($this->registeredSettings as $settings) {
+            $this->app->forgetInstance($settings);
+        }
     }
 }

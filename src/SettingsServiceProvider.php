@@ -42,8 +42,6 @@ class SettingsServiceProvider extends ServiceProvider
             MakeSettingsMigrationCommand::class,
         ]);
 
-        $this->bindSettingClasses();
-
         $rootNamespace = trim($this->app->getNamespace(), '\\');
 
         Facades\SettingsManager::addNamespace("$rootNamespace\\Settings");
@@ -141,12 +139,5 @@ class SettingsServiceProvider extends ServiceProvider
                 ]),
             ),
         ], 'laravel-settings-migrations');
-    }
-
-    public function bindSettingClasses(): void
-    {
-        Facades\SettingsManager::clearResolvedSettings();
-
-        Facades\SettingsManager::getClasses();
     }
 }
