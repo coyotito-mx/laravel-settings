@@ -4,6 +4,7 @@ use Coyotito\LaravelSettings\AbstractSettings;
 use Coyotito\LaravelSettings\Database\Schema\Blueprint;
 use Coyotito\LaravelSettings\Facades\Settings;
 use Coyotito\LaravelSettings\Facades\Schema;
+
 use function Coyotito\LaravelSettings\Helpers\settings;
 
 it('can add settings', function () {
