@@ -6,6 +6,14 @@ namespace Coyotito\LaravelSettings\Database\Schema;
 
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 
+/**
+ * Blueprint class
+ *
+ * Used to define settings to be added or removed
+ * from the settings repository
+ *
+ * @package Coyotito\LaravelSettings
+ */
 final class Blueprint
 {
     /**
@@ -26,7 +34,7 @@ final class Blueprint
     /**
      * Add setting
      */
-    public function add(string $name, mixed $value = null): static
+    public function add(string $name, mixed $value = null): self
     {
         $this->settingsToAdd[\Str::snake($name)] = $value;
 
@@ -36,7 +44,7 @@ final class Blueprint
     /**
      * Remove setting
      */
-    public function remove(string $name): static
+    public function remove(string $name): self
     {
         $this->settingsToDelete[] = $name;
 

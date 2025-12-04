@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Facades;
 
+use Coyotito\LaravelSettings\Database\Schema\Builder;
 use Illuminate\Support\Facades\Facade;
 
 /**
  * Schema class to define settings
  *
- * @mixin \Coyotito\LaravelSettings\Database\Schema\Builder
+ * @mixin Builder
+ *
+ * @package Coyotito\LaravelSettings
  */
 class Schema extends Facade
 {

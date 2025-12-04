@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  *
- * @method \Illuminate\Database\Eloquent\Builder<self> byGroup(string $group)
+ * @method Builder<self> byGroup(string $group)
  *
  * @property string $name Name of the setting
  * @property string $group Group where the setting is stored
@@ -17,7 +18,9 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @mixin Model
  *
- * @package Coyotito\LaravelSettings
+ * @internal
+ *
+ * @package Coyotito\SettingsManager
  */
 final class Setting extends Model
 {
@@ -30,7 +33,6 @@ final class Setting extends Model
 
     public $casts = [
         'locked' => 'boolean',
-        'payload' => 'json',
     ];
 
     /**
@@ -38,7 +40,6 @@ final class Setting extends Model
      *
      * @param mixed $query Model query
      * @param string $group The group to filter for
-     * @return void
      */
     public function scopeByGroup($query, string $group): void
     {

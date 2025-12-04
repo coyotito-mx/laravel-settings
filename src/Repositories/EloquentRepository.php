@@ -4,188 +4,137 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Repositories;
 
-use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
+use Coyotito\LaravelSettings\Casters\Contracts\PrepareValue;
+use Coyotito\LaravelSettings\Casters\PrepareEloquentValue;
+use Coyotito\LaravelSettings\Models\Setting;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use RuntimeException;
+use Illuminate\Support\Collection;
 
-class EloquentRepository implements Contracts\Repository
+/**
+ * Eloquent repository for settings storage.
+ *
+ * This repository uses Eloquent models to persist settings in a database.
+ *
+ * @package Coyotito\LaravelSettings
+ */
+class EloquentRepository extends BaseRepository
 {
-    protected ?string $group = null;
-
     /**
      * Construct the Eloquent repository using the given model as the source
      *
-     * @param class-string<\Coyotito\LaravelSettings\Models\Setting> $model
+     * @param class-string<Setting> $model The Eloquent model class to use for settings storage
+     * @param string $group The group name for the settings
      */
-    public function __construct(protected string $model)
+    public function __construct(protected string $model, string $group = AbstractSettings::DEFAULT_GROUP)
     {
-        //
+        parent::__construct($group);
     }
 
-    public function get(string|array $setting, mixed $default = null): mixed
+    /**
+     * {@inheritDoc}
+     */
+    protected function getSettings(?array $settings = null): Collection
     {
-        if (func_num_args() === 2 || is_string($setting)) {
-            $setting = [
-                $setting => $default
-            ];
+        $query = $this->query();
+
+        if (is_array($settings)) {
+            $query->whereIn('name', $settings);
         }
 
-        $isList = array_is_list($setting);
-        $settingsNames = $isList ? $setting : array_keys($setting);
-        $existingSettings = $this->withGroup()->whereIn('name', $settingsNames)->get(['name', 'payload']);
-
-        $collection = collect($setting)
-            ->mapWithKeys(function (mixed $value, int|string $name) use ($existingSettings, $default): array {
-                if (is_int($name)) {
-                    [$value, $name] = [$name, $value];
-
-                    $value = $default;
-                }
-
-                return [
-                    $name => $existingSettings->where('name', $name)->first()->payload ?? $value,
-                ];
-            });
-
-        if ($collection->count() === 1) {
-            return $collection->first();
-        }
-
-        return $collection->all();
+        return $this->normalizeSettings(
+            $query->pluck('payload', 'name')->all()
+        );
     }
 
-    public function getAll(): array
+    /**
+     * {@inheritDoc}
+     */
+    protected function updateMany(array|Collection $settings): void
     {
-        return $this->withGroup()->get(['name', 'payload'])->pluck('payload', 'name')->toArray();
+        $this->upsertMany($settings);
     }
 
-    public function update(string|array $setting, mixed $value = null): void
+    /**
+     * {@inheritDoc}
+     */
+    protected function insertMany(array|Collection $settings): void
     {
-        if (func_num_args() === 2 || is_string($setting)) {
-            $setting = [
-                $setting => $value
-            ];
-        }
-
-        if (empty($setting)) {
-            return;
-        }
-
-        $settingNames = array_keys($setting);
-
-        $presentSettings = $this->withGroup()->whereIn('name', $settingNames)->pluck('locked', 'name');
-        $locked = $presentSettings->filter(fn (bool $locked): bool => $locked);
-
-        if ($locked->isNotEmpty()) {
-            throw new LockedSettingException($locked->keys()->all());
-        }
-
-        if ($presentSettings->isEmpty()) {
-            return;
-        }
-
         $now = now();
+        $records = [];
 
-        $data = $presentSettings->keys()->map(function (string $name) use ($setting, $now): array {
-            return [
+        foreach ($settings as $name => $setting) {
+            $records[] = [
+                'group' => $this->group,
                 'name' => $name,
-                'group' => $this->group(),
-                'payload' => $this->castValue($setting[$name] ?? null),
+                'payload' => $setting['payload']->transform(),
+                'created_at' => $now,
                 'updated_at' => $now,
             ];
-        })->toArray();
+        }
 
-        $this->query()->upsert($data, ['group', 'name'], ['payload', 'updated_at']);
+        ($this->model)::insert($records);
     }
 
-    public function insert(string|array $setting, mixed $value = null): void
+    /**
+     * {@inheritDoc}
+     */
+    protected function upsertMany(array $settings): void
     {
-        if (func_num_args() === 2 || is_string($setting)) {
-            $setting = [
-                $setting => $value
+        $now = now();
+        $records = [];
+
+        foreach ($settings as $name => $setting) {
+            $records[] = [
+                'group' => $this->group,
+                'name' => $name,
+                'payload' => $setting['payload']->transform(),
+                'updated_at' => $now,
             ];
         }
 
-        if (empty($setting)) {
-            return;
-        }
-
-        $now = now();
-        $presentSettings = $this->withGroup()->whereIn('name', array_keys($setting))->pluck('name');
-
-        $data = collect($setting)
-            ->diffKeys($presentSettings)
-            ->map(fn (mixed $value, string $name): array =>
-                [
-                    'name' => $name,
-                    'group' => $this->group(),
-                    'payload' => $this->castValue($value ?? null),
-                    'updated_at' => $now,
-                    'created_at' => $now,
-                ])->toArray();
-
-        $this->query()->insert($data);
+        ($this->model)::upsert($records, ['group', 'name'], ['payload', 'updated_at']);
     }
 
-    public function delete(string|array $setting): int
+    /**
+     * {@inheritDoc}
+     */
+    protected function deleteMany(array $settings): void
     {
-        $setting = Arr::wrap($setting);
-
-        if (empty($setting)) {
-            return 0;
-        }
-
-        $locked = $this->withGroup()->where('locked', true)->whereIn('name', $setting)->pluck('name');
-
-        if ($locked->isNotEmpty()) {
-            throw new LockedSettingException($locked->all());
-        }
-
-        return (int) $this->withGroup()->whereIn('name', $setting)->delete();
+        $this->query()->whereIn('name', $settings)->delete();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function drop(): void
     {
-        $this->withGroup()->delete();
+        $this->query()->delete();
     }
 
-    public function group(): string
-    {
-        if (! filled($this->group)) {
-            throw new RuntimeException('The group must not be empty');
-        }
-
-        return $this->group;
-    }
-
-    public function setGroup(string $group): void
-    {
-        $this->group = $group;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     public function renameGroup(string $newGroup): void
     {
-        if ($this->withGroup()->update(['group' => $newGroup])) {
-            $this->setGroup($newGroup);
+        if ($this->query()->update(['group' => $newGroup])) {
+            $this->group = $newGroup;
         }
     }
 
     /**
-     * @return Builder<\Coyotito\LaravelSettings\Models\Setting>
+     * {@inheritDoc}
      */
-    protected function query(): Builder
+    protected function castValue(mixed $value): PrepareValue
     {
-        return $this->model::query();
+        return new PrepareEloquentValue($value);
     }
 
-    protected function withGroup(): Builder
+    /**
+     * Get the base query builder for the current group.
+     */
+    private function query(): Builder
     {
-        return $this->query()->byGroup($this->group());
-    }
-
-    protected function castValue(mixed $value): ?string
-    {
-        return ! is_null($value) ? json_encode($value) : null;
+        return ($this->model)::byGroup($this->group);
     }
 }

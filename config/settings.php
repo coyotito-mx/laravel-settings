@@ -17,7 +17,7 @@ return [
     | List of Repositories
     |--------------------------------------------------------------------------
     |
-    | Here you may define all of the repositories that will be used to store
+    | Here you may define all the repositories that will be used to store
     | settings. You can add your own custom repositories as needed.
     |
     */
@@ -27,19 +27,5 @@ return [
 
             'model' => \Coyotito\LaravelSettings\Models\Setting::class,
         ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Registered Settings Classes
-    |--------------------------------------------------------------------------
-    |
-    | Here you may list all of the settings classes that should be registered
-    | by the package. These classes will be accessible via the Laravel Container,
-    | and can be resolved using the Laravel dependency injection.
-    |
-    */
-    'classes' => [
-        //
     ],
 ];
