@@ -61,7 +61,7 @@ final class Builder
         $blueprint = new Blueprint($repo);
 
         if (is_string($settings)) {
-            $setting = Arr::wrap($settings);
+            $settings = Arr::wrap($settings);
         }
 
         foreach ($settings as $setting) {

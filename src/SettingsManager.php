@@ -185,12 +185,40 @@ class SettingsManager
     }
 
     /**
+     * Clear all registered namespaces
+     */
+    public function clearRegisteredNamespaces(): void
+    {
+        foreach (array_keys($this->namespaces) as $namespace) {
+            unset($this->namespaces[$namespace]);
+        }
+    }
+
+    /**
+     * Clear a registered settings class
+     *
+     * @param class-string<AbstractSettings> $settings
+     */
+    public function clearRegisteredSettingsClass(string $settings): void
+    {
+        $group = $this->resolveGroupName($settings);
+
+        if (! isset($this->registeredSettings[$group])) {
+            return;
+        }
+
+        $this->app->forgetInstance($settings);
+    }
+
+    /**
      * Clear the resolved settings cache
      */
-    public function clearRegisteredSettings(): void
+    public function clearRegisteredSettingsClasses(): void
     {
+        $this->clearRegisteredNamespaces();
+
         foreach ($this->registeredSettings as $settings) {
-            $this->app->forgetInstance($settings);
+            $this->clearRegisteredSettingsClass($settings);
         }
     }
 }

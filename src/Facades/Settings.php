@@ -25,14 +25,14 @@ class Settings extends Facade
      */
     public static function fake(array $data = [], string $group = AbstractSettings::DEFAULT_GROUP): void
     {
-        SettingsManager::clearRegisteredSettings();
+        SettingsManager::clearRegisteredSettingsClasses();
 
         static::$app->forgetInstance(Repository::class);
         static::$app->scoped(
             Repository::class,
             fn () => tap(
                 new InMemoryRepository($group),
-                fn ($repo) => $repo->insert($data)
+                fn ($repo) => $data && $repo->insert($data)
             )
         );
 
