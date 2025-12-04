@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace {{namespace}};
 
-use Coyotito\LaravelSettings\AbstractSettings as Settings;
+use Coyotito\LaravelSettings\Settings;
 
 class {{class}} extends Settings
 {

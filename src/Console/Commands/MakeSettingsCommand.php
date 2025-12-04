@@ -94,7 +94,7 @@ class MakeSettingsCommand extends Command
             return $className;
         }
 
-        return $this->option('group') === \Coyotito\LaravelSettings\AbstractSettings::DEFAULT_GROUP ? 'DefaultSettings' : $this->option('group');
+        return $this->option('group') === \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP ? 'DefaultSettings' : $this->option('group');
     }
 
     /**

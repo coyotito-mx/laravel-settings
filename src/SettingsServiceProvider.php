@@ -85,13 +85,13 @@ class SettingsServiceProvider extends ServiceProvider
             return new SettingsManager($app);
         });
 
-        $this->app->scoped(Settings::class, function (Application $app): Settings {
+        $this->app->scoped(SettingsService::class, function (Application $app): SettingsService {
             $manager = $app->make('settings.manager');
 
-            return new Settings($manager);
+            return new SettingsService($manager);
         });
 
-        $this->app->alias(Settings::class, 'settings.service');
+        $this->app->alias(SettingsService::class, 'settings.service');
     }
 
     /**

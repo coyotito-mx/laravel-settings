@@ -1,6 +1,5 @@
 <?php
 
-use Coyotito\LaravelSettings\AbstractSettings;
 use Coyotito\LaravelSettings\Database\Schema\Blueprint;
 use Coyotito\LaravelSettings\Facades\Settings;
 use Coyotito\LaravelSettings\Facades\Schema;
@@ -88,7 +87,7 @@ it('can drop settings', function () {
         'baz' => 'foobar',
     ]);
 
-    Schema::drop(AbstractSettings::DEFAULT_GROUP);
+    Schema::drop(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
 
     expect(settings())
         ->get('foo')

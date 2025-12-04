@@ -3,7 +3,7 @@
 namespace Coyotito\LaravelSettings\Helpers
 {
 
-    use Coyotito\LaravelSettings\Settings;
+    use Coyotito\LaravelSettings\SettingsService;
     use Illuminate\Support\Collection;
     use Illuminate\Support\Facades\File;
     use Illuminate\Support\Str;
@@ -118,7 +118,7 @@ namespace Coyotito\LaravelSettings\Helpers
      */
     function settings(null|string|array $setting = null, mixed $default = null)
     {
-        /** @var Settings $service */
+        /** @var SettingsService $service */
         $service = app()->make('settings.service');
 
         // If no arguments, return the service instance
