@@ -12,6 +12,8 @@ use Illuminate\Support\Collection;
  * It is useful for testing or temporary settings storage.
  *
  * @internal
+ *
+ * @package Coyotito\LaravelSettings
  */
 final class InMemoryRepository extends BaseRepository
 {

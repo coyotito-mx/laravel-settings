@@ -2,6 +2,7 @@
 
 use Coyotito\LaravelSettings\Facades\Settings;
 use Orchestra\Testbench;
+
 use function Coyotito\LaravelSettings\Helpers\package_path;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Coyotito\LaravelSettings\Helpers\settings;

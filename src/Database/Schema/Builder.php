@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Database\Schema;
 
+use Closure;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Illuminate\Support\Arr;
 
+/**
+ * Builder class
+ *
+ * Used to build settings schema operations
+ *
+ * @package Coyotito\LaravelSettings
+ */
 final class Builder
 {
-    public const string DEFAULT_GROUP = \Coyotito\LaravelSettings\AbstractSettings::DEFAULT_GROUP;
+    public const string DEFAULT_GROUP = AbstractSettings::DEFAULT_GROUP;
 
     public function __construct(protected Repository $repo)
     {
@@ -20,9 +29,9 @@ final class Builder
      * Add settings to the given group
      *
      * @param string $group Name of the group
-     * @param \Closure(Blueprint $group): void $callback
+     * @param Closure(Blueprint $group): void $callback
      */
-    public function in(string $group, \Closure $callback): void
+    public function in(string $group, Closure $callback): void
     {
         $repo = tap($this->repo, fn ($repo) => $repo->group = $group);
         $blueprint = new Blueprint($repo);
@@ -33,9 +42,9 @@ final class Builder
     /**
      * Add settings to the default group
      *
-     * @param \Closure(Blueprint $group): void $callback
+     * @param Closure(Blueprint $group): void $callback
      */
-    public function default(\Closure $callback): void
+    public function default(Closure $callback): void
     {
         $repo = tap($this->repo, fn ($repo) => $repo->group = self::DEFAULT_GROUP);
         $blueprint = new Blueprint($repo);

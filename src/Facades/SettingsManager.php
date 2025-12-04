@@ -8,7 +8,11 @@ use Coyotito\LaravelSettings\SettingsManager as Manager;
 use Illuminate\Support\Facades\Facade;
 
 /**
+ * Settings Manager Facade
+ *
  * @mixin Manager
+ *
+ * @package Coyotito\LaravelSettings
  */
 class SettingsManager extends Facade
 {

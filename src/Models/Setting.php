@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  *
- * @method \Illuminate\Database\Eloquent\Builder<self> byGroup(string $group)
+ * @method Builder<self> byGroup(string $group)
  *
  * @property string $name Name of the setting
  * @property string $group Group where the setting is stored
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $locked if the setting can be updated or deleted
  *
  * @mixin Model
+ *
+ * @internal
  *
  * @package Coyotito\SettingsManager
  */

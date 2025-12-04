@@ -15,6 +15,8 @@ use Illuminate\Support\Collection;
  * Eloquent repository for settings storage.
  *
  * This repository uses Eloquent models to persist settings in a database.
+ *
+ * @package Coyotito\LaravelSettings
  */
 class EloquentRepository extends BaseRepository
 {

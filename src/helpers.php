@@ -66,9 +66,55 @@ namespace Coyotito\LaravelSettings\Helpers
      * Get / Update settings values
      *
      *
-     * if `$setting` is string and `$default` an `array<int, string>, the `$setting` will now represent
+     * if `$setting` is string and `$default` an `array<int, string>`, the `$setting` will now represent
      * the group from where you want to get the settings, but if the `array` is `array<string, mixed>`, this
-     * will represent to update the specified settings
+     * will represent to update the specified settings.
+     *
+     * <code>
+     *
+     * // Get the Settings service instance
+     * $settings = settings();
+     *
+     * // Get settings values
+     * // $settings->get('setting');
+     * $value = settings('setting');
+     *
+     * // Get setting with default value
+     * // $settings->get('setting', 'default value');
+     * $value = settings('setting', 'default value');
+     *
+     * // Get multiple settings in the default group
+     * // $settings->get(['setting1', 'setting2', 'setting3']);
+     * $values = settings(['setting1', 'setting2', 'setting3']);
+     *
+     * // Get multiple settings in a specific group
+     * // $settings->group('group')->get(['setting1', 'setting2']);
+     * $values = settings('group', ['setting1', 'setting2']);
+     *
+     * // Set a single setting in the default group
+     * // $settings->set(['setting' => 'new value']);
+     * settings(['setting' => 'new value']);
+     *
+     * // Set multiple settings in the default group
+     * // $settings->set([
+     * //     'setting1' => 'value1',
+     * //     'setting2' => 'value2'
+     * // ]);
+     * settings([
+     *     'setting1' => 'value1',
+     *     'setting2' => 'value2',
+     * ]);
+     *
+     * // Set multiple settings in a specific group
+     * // $settings->group('group')->set([
+     * //     'setting1' => 'value1',
+     * //     'setting2' => 'value2'
+     * // ]);
+     * settings('group', [
+     *     'setting1' => 'value1',
+     *     'setting2' => 'value2',
+     * ]);
+     * </code>
      */
     function settings(null|string|array $setting = null, mixed $default = null)
     {

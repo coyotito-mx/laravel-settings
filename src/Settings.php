@@ -7,6 +7,11 @@ namespace Coyotito\LaravelSettings;
 use Illuminate\Support\Arr;
 use RuntimeException;
 
+/**
+ * Settings service
+ *
+ * @package Coyotito\LaravelSettings
+ */
 class Settings
 {
     public function __construct(protected ?SettingsManager $manager, protected string $group = AbstractSettings::DEFAULT_GROUP)
@@ -23,10 +28,10 @@ class Settings
     public function get(string|array $key, mixed $default = null): mixed
     {
         if (is_null($default)) {
-            return $this->settings()->get($key);
+            return $this->settingsManager()->get($key);
         }
 
-        return $this->settings()->get($key, $default);
+        return $this->settingsManager()->get($key, $default);
     }
 
     /**
@@ -54,7 +59,7 @@ class Settings
             );
         }
 
-        $this->settings()->fill($settings)->save();
+        $this->settingsManager()->fill($settings)->save();
 
         return $this;
     }
@@ -70,7 +75,7 @@ class Settings
     /**
      * Manage the settings based on the specified group
      */
-    protected function settings(): AbstractSettings
+    protected function settingsManager(): AbstractSettings
     {
         $settings = $this->manager->resolveSettings($this->group);
 

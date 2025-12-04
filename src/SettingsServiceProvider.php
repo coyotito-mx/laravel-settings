@@ -17,6 +17,11 @@ use Illuminate\Support\ServiceProvider;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
 
+/**
+ * Service provider for the Laravel Settings package.
+ *
+ * @package Coyotito\LaravelSettings
+ */
 class SettingsServiceProvider extends ServiceProvider
 {
     /**
@@ -127,6 +132,9 @@ class SettingsServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Publish the package migrations.
+     */
     protected function publishMigrations(): void
     {
         $migrationFilename = 'eloquent_repository_migration.php';

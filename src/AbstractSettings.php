@@ -16,6 +16,8 @@ use ReflectionUnionType;
  * Abstract base class for application settings with automatic persistence.
  *
  * Provides automatic casting, change tracking, and group management.
+ *
+ * @package Coyotito\LaravelSettings
  */
 abstract class AbstractSettings
 {
@@ -50,6 +52,13 @@ abstract class AbstractSettings
         );
     }
 
+    /**
+     * Get the value of a setting or multiple settings.
+     *
+     * @param string|array $key The setting key or an array of setting keys
+     * @param mixed $default The default value to return if the setting is not found
+     * @return mixed|array<string, mixed> The setting value or an array of setting values
+     */
     public function get(string|array $key, mixed $default = null): mixed
     {
         if (is_string($key)) {
@@ -83,6 +92,8 @@ abstract class AbstractSettings
 
     /**
      * Get the updated settings
+     *
+     * @return array<string, mixed>
      */
     private function getUpdated(): array
     {
@@ -112,6 +123,11 @@ abstract class AbstractSettings
         return $this->cachedPublicPropertyNames;
     }
 
+    /**
+     * Resolve the public properties and their types.
+     *
+     * @return array<string, ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null>
+     */
     protected function resolvePublicProperties(): array
     {
         $properties = new ReflectionClass($this)->getProperties(ReflectionProperty::IS_PUBLIC);
@@ -183,6 +199,8 @@ abstract class AbstractSettings
 
     /**
      * Get all the settings
+     *
+     * @return array<string, mixed>
      */
     final public function all(): array
     {
@@ -192,6 +210,9 @@ abstract class AbstractSettings
             ->all();
     }
 
+    /**
+     * Get the group name
+     */
     public static function getGroup(): string
     {
         return AbstractSettings::DEFAULT_GROUP;

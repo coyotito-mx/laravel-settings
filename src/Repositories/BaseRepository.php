@@ -15,6 +15,7 @@ use Illuminate\Support\Collection;
  * @template-covariant TPrepareValue of PrepareValue
  * @template TNormalizedSetting of array{name: string, payload: TPrepareValue}
  *
+ * @package Coyotito\LaravelSettings
  */
 abstract class BaseRepository implements Contracts\Repository
 {

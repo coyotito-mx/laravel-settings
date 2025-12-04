@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
-use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
-use Coyotito\LaravelSettings\Settings\DynamicSettings;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Arr;
@@ -15,10 +12,25 @@ use InvalidArgumentException;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
+/**
+ * Manages the registration and resolution of settings classes.
+ *
+ * @package Coyotito\LaravelSettings
+ */
 class SettingsManager
 {
+    /**
+     * Registered namespaces and their corresponding Setting classes.
+     *
+     * @var array <string, class-string<AbstractSettings>[]>
+     */
     protected array $namespaces = [];
 
+    /**
+     * Registered Setting classes by their group names.
+     *
+     * @var array<string, class-string<AbstractSettings>>
+     */
     protected array $registeredSettings = [];
 
     public function __construct(protected(set) Application $app)
@@ -141,6 +153,9 @@ class SettingsManager
         return $this->app->make($settings);
     }
 
+    /**
+     * Check if the settings group is already registered
+     */
     protected function ensureUniqueGroupRegistration(string $settings): void
     {
         $group = $this->resolveGroupName($settings);

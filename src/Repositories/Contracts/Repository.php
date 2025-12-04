@@ -14,6 +14,9 @@ namespace Coyotito\LaravelSettings\Repositories\Contracts;
  */
 interface Repository
 {
+    /**
+     * The group of settings being handled
+     */
     public string $group {
         get;
         set;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Facades;
 
+use Coyotito\LaravelSettings\Settings as SettingsService;
 use Coyotito\LaravelSettings\AbstractSettings;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
@@ -11,7 +12,11 @@ use Coyotito\LaravelSettings\Settings\DynamicSettings;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @mixin \Coyotito\LaravelSettings\Settings
+ * Facade for the Settings service.
+ *
+ * @mixin SettingsService
+ *
+ * @package Coyotito\LaravelSettings
  */
 class Settings extends Facade
 {
@@ -34,6 +39,9 @@ class Settings extends Facade
         SettingsManager::registerSettingsClass(DynamicSettings::class, $group);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected static function getFacadeAccessor(): string
     {
         return 'settings.service';
