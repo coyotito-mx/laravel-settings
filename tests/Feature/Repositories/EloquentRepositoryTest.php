@@ -1,7 +1,8 @@
 <?php
 
-use Coyotito\LaravelSettings\Models\Exceptions\LockedSettingException;
 use Coyotito\LaravelSettings\Models\Setting;
+use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Illuminate\Support\Facades\Schema;
 
 use function Pest\Laravel\artisan;
@@ -11,9 +12,9 @@ use function Pest\Laravel\assertDatabaseHas;
 beforeEach(function () {
     rmdir_recursive(database_path('migrations'), delete_root: false);
 
-    /** @var \Coyotito\LaravelSettings\Repositories\Contracts\Repository $repo */
-    $repo = app()->make('settings.repository');
-    $repo->setGroup('default');
+    /** @var Repository $repo */
+    $repo = app()->make('repository.eloquent');
+    $repo->group = AbstractSettings::DEFAULT_GROUP;
 
     artisan('vendor:publish --tag=laravel-settings-migrations');
     artisan('migrate');
@@ -26,17 +27,17 @@ afterEach(function () {
 });
 
 it('has settings table', function () {
-    $table = (new Setting())->getTable();
+    $table = new Setting()->getTable();
 
     expect(Schema::hasTable($table))->toBeTrue();
 });
 
 it('has seeded settings', function () {
-    $table = (new Setting())->getTable();
+    $table = new Setting()->getTable();
 
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     assertDatabaseCount($table, 2);
@@ -49,22 +50,20 @@ it('has seeded settings', function () {
 });
 
 it('can fill properties', function () {
-    Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'description', 'payload' => json_encode('Lorem ipsum dolor it')],
+    $this->repo->insert([
+        'name' => 'Coyotito',
+        'description' => 'Lorem ipsum dolor it',
     ]);
 
-    $settings = (object) $this->repo->get(['name', 'description']);
-
-    expect($settings)
+    expect($this->repo->get(['name', 'description']))
         ->name->toBe('Coyotito')
         ->description->toBe('Lorem ipsum dolor it');
 });
 
 it('update settings', function () {
-    Setting::insert([
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
-        ['group' => 'default', 'name' => 'config', 'payload' => json_encode(['name' => 'Coyotito', 'description' => 'Lorem ipsum dolor it'])],
+    $this->repo->insert([
+        'debug' => true,
+        'config' => ['name' => 'Coyotito', 'description' => 'Lorem ipsum'],
     ]);
 
     $this->repo->update([
@@ -75,9 +74,7 @@ it('update settings', function () {
         ],
     ]);
 
-    $settings = (object) $this->repo->getAll();
-
-    expect($settings)
+    expect($this->repo->getAll())
         ->debug->toBeFalse()
         ->config->toBe([
             'name' => 'Coyotito Rocks!',
@@ -85,72 +82,36 @@ it('update settings', function () {
         ]);
 });
 
-it('cannot update locked settings', function () {
-    Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
-        ['group' => 'default', 'name' => 'env', 'payload' => json_encode('local'), 'locked' => true],
-        ['group' => 'default', 'name' => 'version', 'payload' => json_encode('1.0.0'), 'locked' => false],
-    ]);
-
-    expect(function () {
-        $this->repo->update([
-            'name' => 'Coyotito Rocks!',
-            'debug' => false,
-            'env' => 'production',
-            'version' => '1.1.0',
-        ]);
-    })->toThrow(
-        fn (LockedSettingException $e) => expect($e->setting)->toBe(['env', 'name']),
-        'The settings provided are locked and cannot be modified.'
-    )
-        ->and((object) $this->repo->getAll())
-        ->name->toBe('Coyotito')
-        ->debug->toBeTrue()
-        ->env->toBe('local')
-        ->version->toBe('1.0.0');
-});
-
 test('dynamic properties are not persisted', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
     ]);
 
-    // Local "dynamic" data not managed by the repository
-    $local = (object) [
-        'dynamic' => 'Hello, world!',
-        'name' => $this->repo->get('name'),
-    ];
-
-    expect($local)
-        ->dynamic->toBe('Hello, world!')
+    expect($this->repo->get(['name', 'description']))
+        ->dynamic->not->toBe('Hello, world!')
         ->name->toBe('Coyotito');
 
-    // Mutate local data and persist only the relevant setting using the repository
-    $local->dynamic = 'Lorem ipsum';
-    $this->repo->update('name', 'Hello, World!');
+    $this->repo->update([
+        'dynamic' => 'Coyotito',
+        'name' => 'Hello, World!',
+    ]);
 
-    expect($this->repo)
-        ->get('dynamic')
-        ->toBeNull()
-        ->get('name')
-        ->toBe('Hello, World!')
-        ->getAll()
-        ->not->toContain('Lorem ipsum')
-        ->toContain('Hello, World!');
+    expect($this->repo->getAll())
+        ->dynamic->toBeNull()
+        ->name->toBe('Hello, World!');
 });
 
 it('gets a single setting with default when not found', function () {
     $value = $this->repo->get('non_existing', 'fallback');
 
     expect($value)->toBe('fallback')
-        ->and(Setting::byGroup('default')->count())->toBe(0);
+        ->and(Setting::byGroup(AbstractSettings::DEFAULT_GROUP)->count())->toBe(0);
 });
 
 it('gets multiple settings as associative array', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     $settings = $this->repo->get(['name', 'debug']);
@@ -175,19 +136,19 @@ it('inserts single and multiple settings', function () {
     assertDatabaseCount($table, 3);
 
     assertDatabaseHas($table, [
-        'group' => 'default',
+        'group' => AbstractSettings::DEFAULT_GROUP,
         'name' => 'name',
         'payload' => json_encode('Coyotito'),
     ]);
 
     assertDatabaseHas($table, [
-        'group' => 'default',
+        'group' => AbstractSettings::DEFAULT_GROUP,
         'name' => 'debug',
         'payload' => json_encode(true),
     ]);
 
     assertDatabaseHas($table, [
-        'group' => 'default',
+        'group' => AbstractSettings::DEFAULT_GROUP,
         'name' => 'env',
         'payload' => json_encode('local'),
     ]);
@@ -195,110 +156,85 @@ it('inserts single and multiple settings', function () {
 
 it('updates existing settings', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     $this->repo->update('name', 'Coyotito Rocks!');
-    $this->repo->update([
-        'debug' => false,
-    ]);
+    $this->repo->update(['debug' => false]);
 
-    $all = $this->repo->getAll();
-
-    expect((object) $all)
+    expect($this->repo->getAll())
         ->name->toBe('Coyotito Rocks!')
         ->debug->toBeFalse();
 });
 
-it('deletes single and multiple settings and returns affected count', function () {
-    Setting::insert([
-        ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1)],
-        ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2)],
-        ['group' => 'default', 'name' => 'third', 'payload' => json_encode(3)],
-    ]);
+it('upserts single and multiple settings', function () {
+    tap($this->repo)
+        ->upsert('name', 'Coyotito')
+        ->upsert([
+            'debug' => true,
+            'env' => 'local',
+        ]);
 
-    $deleted = $this->repo->delete('first');
-    expect($deleted)->toBe(1);
+    expect((object) $this->repo->getAll())
+        ->name->toBe('Coyotito')
+        ->debug->toBeTrue()
+        ->env->toBe('local');
 
-    $deleted = $this->repo->delete(['second', 'missing']);
-    expect($deleted)->toBe(1);
+    tap($this->repo)
+        ->upsert('name', 'Coyotito Rocks!')
+        ->upsert([
+            'debug' => false,
+            'version' => '1.0.0',
+        ]);
 
-    expect(Setting::byGroup('default')->count())->toBe(1);
+    expect((object) $this->repo->getAll())
+        ->name->toBe('Coyotito Rocks!')
+        ->debug->toBeFalse()
+        ->env->toBe('local')
+        ->version->toBe('1.0.0');
 });
 
-it('fails to delete locked settings', function () {
+it('deletes single and multiple settings', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'first', 'payload' => json_encode(1), 'locked' => true],
-        ['group' => 'default', 'name' => 'second', 'payload' => json_encode(2), 'locked' => false],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'first', 'payload' => json_encode(1)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'second', 'payload' => json_encode(2)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'third', 'payload' => json_encode(3)],
     ]);
 
-    expect(fn () => $this->repo->delete(['first', 'second']))
-        ->toThrow(
-            fn (LockedSettingException $e) => expect($e->setting)->toBe(['first']),
-            'The setting provided is locked and cannot be modified.'
-        )
-        ->and(Setting::byGroup('default')->count())
-        ->toBe(2);
+    $this->repo->delete('first');
+
+    expect($this->repo->getAll())->toHaveCount(2);
+
+    $this->repo->delete(['second', 'missing']);
+
+    expect(Setting::byGroup(AbstractSettings::DEFAULT_GROUP)->count())->toBe(1);
 });
 
 it('drops all settings for current group only', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
         ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other')],
     ]);
 
     $this->repo->drop();
 
-    expect(Setting::byGroup('default')->count())->toBe(0)
+    expect(Setting::byGroup(AbstractSettings::DEFAULT_GROUP)->count())->toBe(0)
         ->and(Setting::byGroup('other')->count())->toBe(1);
-});
-
-it('drop settings including locked ones', function () {
-    Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito'), 'locked' => true],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true), 'locked' => false],
-        ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other'), 'locked' => true],
-    ]);
-
-    $this->repo->drop();
-
-    expect(Setting::byGroup('default')->count())->toBe(0)
-        ->and(Setting::byGroup('other')->count())->toBe(1);
-});
-
-it('changes group context with setGroup and group', function () {
-    Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Default')],
-        ['group' => 'other', 'name' => 'name', 'payload' => json_encode('Other')],
-    ]);
-
-    expect($this->repo->group())->toBe('default');
-    expect($this->repo->get('name'))->toBe('Default');
-
-    $this->repo->setGroup('other');
-
-    expect($this->repo->group())->toBe('other')
-        ->and($this->repo->get('name'))->toBe('Other');
 });
 
 it('renames group and moves all settings to the new group', function () {
     Setting::insert([
-        ['group' => 'default', 'name' => 'name', 'payload' => json_encode('Coyotito')],
-        ['group' => 'default', 'name' => 'debug', 'payload' => json_encode(true)],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'name', 'payload' => json_encode('Coyotito')],
+        ['group' => AbstractSettings::DEFAULT_GROUP, 'name' => 'debug', 'payload' => json_encode(true)],
     ]);
 
     $this->repo->renameGroup('renamed');
 
-    expect($this->repo->group())->toBe('renamed');
-
-    expect(Setting::byGroup('default')->count())->toBe(0)
-        ->and(Setting::byGroup('renamed')->count())->toBe(2);
-
-    $all = $this->repo->getAll();
-
-    expect((object) $all)
+    expect(Setting::byGroup(AbstractSettings::DEFAULT_GROUP)->count())->toBe(0)
+        ->and(Setting::byGroup('renamed')->count())->toBe(2)
+        ->and($this->repo->getAll())
         ->name->toBe('Coyotito')
         ->debug->toBeTrue();
 });

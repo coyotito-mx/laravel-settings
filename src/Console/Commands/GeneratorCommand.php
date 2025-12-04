@@ -22,8 +22,6 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
 
     /**
      * The type of file being generated.
-     *
-     * @var string
      */
     protected static string $type;
 
@@ -135,7 +133,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
             'g',
             InputOption::VALUE_REQUIRED,
             "The group to use with settings $type",
-            'default'
+            \Coyotito\LaravelSettings\AbstractSettings::DEFAULT_GROUP
         );
     }
 
@@ -167,7 +165,6 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
      *
      * @param string $basename The name of the file (including the extension)
      * @param string $destination The destination path where the file will be created
-     * @return bool
      */
     public function generateFile(string $basename, string $destination): bool
     {
@@ -205,14 +202,12 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
 
     /**
      * Get the group option
-     *
-     * @return string
      */
     protected function getGroup(): string
     {
         $group = $this->option('group');
 
-        if ($group !== 'default') {
+        if ($group !== \Coyotito\LaravelSettings\AbstractSettings::DEFAULT_GROUP) {
             $this->ensureNotReserved($group, 'group');
         }
 
@@ -233,8 +228,6 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
 
     /**
      * Format the name argument
-     *
-     * @return string
      */
     abstract protected function formatName(string $name): string;
 
