@@ -12,13 +12,16 @@ You can install the package via Composer:
 composer require coyotito/laravel-settings
 ```
 
-Publish the migrations and config file:
+Publish the migrations
 
 ```bash
 php artisan vendor:publish --tag=laravel-settings-migrations
-php artisan vendor:publish --tag=laravel-settings-config
 php artisan migrate
 ```
+
+> **Note**
+>
+> By default, the package usage Eloquent to persist the information
 
 ## Usage
 
@@ -42,7 +45,14 @@ Add typed public properties to your settings class
 
 > **Note**
 >
-> By default, the package usage Eloquent to persist the information
+> The only available types are:
+> `int`,
+> `float`,
+> `string`,
+> `array`,
+> and `bool`.
+> But, if you try to store other type of value you "can", depending on the storage repository,
+> but when the settings class is hydrated, an exception will be thrown.
 
 ```php
 <?php
@@ -82,32 +92,44 @@ $settings->save();
 
 ### Settings Migrations
 
-Define initial values using the Schema facade:
+To start persisting the information, create a migration to add the settings you want in your app. Generate a migration
+calling the command `make:settings migration="Add settings`. Doing this will create a migration file like this `*_add_settings.php` (you can name it as you want)
+and the file should look like the following code.
 
 ```php
+declare(strict_types=1);
+
+
+use Illuminate\Database\Migrations\Migration;
 use Coyotito\LaravelSettings\Facades\Schema;
 use Coyotito\LaravelSettings\Database\Schema\Blueprint;
 
-Schema::default(function (Blueprint $group) {
-    $group->add('site_name', 'My Application');
-    $group->add('debug_mode', false);
-});
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::default(function (Blueprint $group) {
+            // Add your settings here
+        });
+    }
 
-// For a specific group
-Schema::in('billing', function (Blueprint $group) {
-    $group->add('currency', 'USD');
-    $group->add('tax_rate', 0.16);
-});
+    public function down(): void
+    {
+        // Remove your settings here
+    }
+};
+
 ```
 
 ### Groups
 
-Settings are organized by groups. Define a custom group in your class:
+Settings are organized by groups. Define a group name by returning the group name in the static function `Settings::group()`
 
 ```php
 class BillingSettings extends Settings
 {
     public string $currency = 'USD';
+
     public float $tax_rate = 0.0;
 
     public static function group(): string
