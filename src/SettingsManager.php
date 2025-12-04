@@ -169,7 +169,7 @@ class SettingsManager
         throw new InvalidArgumentException(sprintf(
             'Settings group "%s" is already registered by class "%s". Cannot register class "%s" with the same group.',
             $existingSettings::getGroup(),
-            $existingSettings::class,
+            class_basename($settings),
             $settings,
         ));
     }
