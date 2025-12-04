@@ -115,11 +115,15 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Remove your settings here
+        Schema::delete([
+            // Add your settings here to be deleted
+        ]);
     }
 };
-
 ```
+
+As you can see, this is a standard Laravel migration file, but instead of using the `Schema` facade from Laravel,
+we use the `Coyotito\LaravelSettings\Facades\Schema` facade to add or delete settings.
 
 ### Groups
 
