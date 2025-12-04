@@ -10,6 +10,7 @@ use ReflectionClass;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionProperty;
+use ReflectionType;
 use ReflectionUnionType;
 
 /**
@@ -126,7 +127,7 @@ abstract class AbstractSettings
     /**
      * Resolve the public properties and their types.
      *
-     * @return array<string, ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null>
+     * @return array<string, null|ReflectionType>
      */
     protected function resolvePublicProperties(): array
     {
