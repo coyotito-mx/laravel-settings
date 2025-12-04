@@ -22,7 +22,7 @@ class SettingsManager
     /**
      * Registered namespaces and their corresponding Setting classes.
      *
-     * @var array <string, class-string<AbstractSettings>[]>
+     * @var array <string, class-string<Settings>[]>
      */
     protected array $namespaces = [];
 
