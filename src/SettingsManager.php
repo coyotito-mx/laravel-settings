@@ -186,7 +186,7 @@ class SettingsManager
 
     public function clearRegisteredNamespaces(): void
     {
-        foreach ($this->namespaces as $namespace) {
+        foreach (array_keys($this->namespaces) as $namespace) {
             unset($this->namespaces[$namespace]);
         }
     }
