@@ -32,7 +32,7 @@ class Settings extends Facade
             Repository::class,
             fn () => tap(
                 new InMemoryRepository($group),
-                fn ($repo) => $repo->insert($data)
+                fn ($repo) => $data && $repo->insert($data)
             )
         );
 
