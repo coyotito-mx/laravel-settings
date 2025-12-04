@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Console\Commands\Concerns;
 
-use Coyotito\LaravelSettings\AbstractSettings;
+use Coyotito\LaravelSettings\Settings;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
 
@@ -24,9 +24,9 @@ trait InteractsWithStubs
      */
     protected function resolveStub(string $type): string
     {
-        $group = AbstractSettings::DEFAULT_GROUP;
+        $group = Settings::DEFAULT_GROUP;
 
-        if ($this->getGroup() !== AbstractSettings::DEFAULT_GROUP) {
+        if ($this->getGroup() !== Settings::DEFAULT_GROUP) {
             $group = 'group';
         }
 

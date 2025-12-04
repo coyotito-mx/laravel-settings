@@ -2,11 +2,18 @@
 
 namespace Coyotito\LaravelSettings\Settings;
 
-use Coyotito\LaravelSettings\AbstractSettings;
+use Coyotito\LaravelSettings\Settings;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use ReflectionNamedType;
 
-class DynamicSettings extends AbstractSettings
+/**
+ * A settings class that dynamically creates properties based on the settings stored in the repository.
+ *
+ * @internal
+ *
+ * @package Coyotito\LaravelSettings
+ */
+class DynamicSettings extends Settings
 {
     protected array $dynamicProperties = [];
 

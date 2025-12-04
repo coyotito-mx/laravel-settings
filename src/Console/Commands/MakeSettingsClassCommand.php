@@ -70,7 +70,7 @@ class MakeSettingsClassCommand extends Command
 
         $this
             ->addReservedName('Default')
-            ->addReservedName(\Coyotito\LaravelSettings\AbstractSettings::DEFAULT_GROUP)
+            ->addReservedName(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP)
             ->addReservedName('Settings')
             ->addReservedName('settings')
             ->addReservedName('Setting')
@@ -104,7 +104,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function getNamespace(): string
     {
-        /** @phpstan-ignore-next-line */
+        /** @var string $rootNamespace */
         $rootNamespace = $this->option('namespace') ?? $this->getDefaultNamespace();
 
         $this->ensureNotReserved($rootNamespace, 'namespace');

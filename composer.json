@@ -7,10 +7,9 @@
         "php": "^8.4"
     },
     "require-dev": {
-          "barryvdh/laravel-ide-helper": "^3.6",
-          "larastan/larastan": "^3.7",
-          "laravel/pint": "^v1.25.1",
-          "orchestra/testbench": "^10.6",
+          "larastan/larastan": "^3.8",
+          "laravel/pint": "^v1.26.0",
+          "orchestra/testbench": "^10.8",
           "pestphp/pest": "v4.1.2",
           "pestphp/pest-plugin-laravel": "^4.0",
           "rector/rector": "^2.2"
@@ -26,10 +25,7 @@
     "autoload-dev": {
         "psr-4": {
             "App\\": "vendor/orchestra/testbench-core/laravel/app/",
-            "Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/",
-            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
-            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+            "Tests\\": "tests/"
         }
     },
     "extra": {
@@ -50,19 +46,7 @@
             "@style:test"
         ],
         "rector:dry": "@php vendor/bin/rector --ansi --dry-run",
-        "rector:fix": "@php vendor/bin/rector --ansi",
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "build": "@php vendor/bin/testbench workbench:build --ansi",
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@build",
-            "@php vendor/bin/testbench serve --ansi"
-        ]
+        "rector:fix": "@php vendor/bin/rector --ansi"
     },
     "config": {
         "preferred-install": "dist",

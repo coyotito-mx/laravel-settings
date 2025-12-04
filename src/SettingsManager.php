@@ -22,14 +22,14 @@ class SettingsManager
     /**
      * Registered namespaces and their corresponding Setting classes.
      *
-     * @var array <string, class-string<AbstractSettings>[]>
+     * @var array <string, class-string<Settings>[]>
      */
     protected array $namespaces = [];
 
     /**
      * Registered Setting classes by their group names.
      *
-     * @var array<string, class-string<AbstractSettings>>
+     * @var array<string, class-string<Settings>>
      */
     protected array $registeredSettings = [];
 
@@ -63,7 +63,7 @@ class SettingsManager
     /**
      * Resolve the Setting classes in a given namespace.
      *
-     * @return ?class-string<AbstractSettings>[]
+     * @return ?class-string<Settings>[]
      */
     protected function getSettingsClasses(string $namespace, ?string $path): ?array
     {
@@ -85,13 +85,13 @@ class SettingsManager
             return "$namespace\\$className";
         });
 
-        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, AbstractSettings::class));
+        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class));
     }
 
     /**
      * Register a Setting class in the container.
      *
-     * @param class-string<AbstractSettings> $settings
+     * @param class-string<Settings> $settings
      */
     public function registerSettingsClass(string $settings, ?string $group = null): void
     {
@@ -115,10 +115,10 @@ class SettingsManager
 
         $this->registeredSettings[$group] = $settings;
 
-        $this->app->scoped($settings, static function ($app) use ($settings, $group): AbstractSettings {
+        $this->app->scoped($settings, static function ($app) use ($settings, $group): Settings {
             $repository = $app->make('settings.repository');
 
-            /** @var AbstractSettings $instance */
+            /** @var Settings $instance */
             $instance = new $settings($repository);
 
             if (filled($instance)) {
@@ -134,7 +134,7 @@ class SettingsManager
     /**
      * Preload the settings class if needed
      */
-    protected function preloadSettingsClass(string|AbstractSettings $settings): void
+    protected function preloadSettingsClass(string|Settings $settings): void
     {
         $this->app->make($settings);
     }
@@ -142,7 +142,7 @@ class SettingsManager
     /**
      * Resolve the settings instance from the given group
      */
-    public function resolveSettings(string $group): ?AbstractSettings
+    public function resolveSettings(string $group): ?Settings
     {
         $settings = $this->registeredSettings[$group] ?? null;
 
@@ -177,7 +177,7 @@ class SettingsManager
     /**
      * Resolve the settings group key for the given settings class
      *
-     * @param class-string<AbstractSettings> $settings
+     * @param class-string<Settings> $settings
      */
     public function resolveGroupName(string $settings): string
     {
@@ -197,7 +197,7 @@ class SettingsManager
     /**
      * Clear a registered settings class
      *
-     * @param class-string<AbstractSettings> $settings
+     * @param class-string<Settings> $settings
      */
     public function clearRegisteredSettingsClass(string $settings): void
     {

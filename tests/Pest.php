@@ -11,7 +11,7 @@
 |
 */
 
-use Coyotito\LaravelSettings\AbstractSettings;
+use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
@@ -60,7 +60,7 @@ expect()->extend('toBeClassSettings', function () {
         ->not->toBeEmpty('The provided class namespace is invalid.')
         ->and("$class.php")->toBeInDirectory($directory)
         ->and(new ReflectionClass($this->value))
-        ->isSubclassOf(AbstractSettings::class)
+        ->isSubclassOf(Settings::class)
         ->toBeTrue("The class [$class] is not a subclass of [Settings]");
 });
 

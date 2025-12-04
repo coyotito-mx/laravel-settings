@@ -4,85 +4,219 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
-use Illuminate\Support\Arr;
-use RuntimeException;
+use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
+use InvalidArgumentException;
+use ReflectionClass;
+use ReflectionIntersectionType;
+use ReflectionNamedType;
+use ReflectionProperty;
+use ReflectionType;
+use ReflectionUnionType;
 
 /**
- * Settings service
+ * Base class for application settings with automatic persistence.
+ *
+ * Provides automatic casting, change tracking, and group management.
  *
  * @package Coyotito\LaravelSettings
  */
-class Settings
+abstract class Settings
 {
-    public function __construct(protected ?SettingsManager $manager, protected string $group = AbstractSettings::DEFAULT_GROUP)
+    /**
+     * Cache for old settings values
+     */
+    final protected array $oldSettings = [];
+
+    /**
+     * The initial values of the settings, and the current state of the
+     */
+    final protected array $initialSettings = [];
+
+    /**
+     * Cache of public properties
+     */
+    final protected array $cachedPublicPropertyNames = [];
+
+    /**
+     * The default group name
+     */
+    public const string DEFAULT_GROUP = 'default';
+
+    public function __construct(protected Repository $repository, public string $group = self::DEFAULT_GROUP)
     {
-        //
+        $this->repository->group = $this->group;
+
+        $properties = array_keys($this->getCachedPropertyNames());
+
+        $this->fill(
+            $this->repository->get($properties)
+        );
     }
 
     /**
-     * Get settings
+     * Get the value of a setting or multiple settings.
      *
-     * if `$key` is string and `$default` an `array`, the `$key` will now represent
-     * the group from where you want to get the settings
+     * @param string|array $key The setting key or an array of setting keys
+     * @param mixed $default The default value to return if the setting is not found
+     * @return mixed|array<string, mixed> The setting value or an array of setting values
      */
     public function get(string|array $key, mixed $default = null): mixed
     {
-        if (is_null($default)) {
-            return $this->settingsManager()->get($key);
+        if (is_string($key)) {
+            return $this->{$key} ?? $default;
         }
 
-        return $this->settingsManager()->get($key, $default);
+        return collect($key)
+            ->mapWithKeys(fn (string $k) => [$k => $this->get($k, $default)])
+            ->all();
     }
 
     /**
-     * Update settings
-     *
-     * if `$key` is string and `$default` an `array`, the `$key` will now represent
-     * the group from where you want to update the settings
+     * Fill the settings with the given data
      */
-    public function set(string|array $values, mixed $default = null): self
+    public function fill(array $data): static
     {
-        if (is_string($values)) {
-            $settings = [$values => $default];
-        } else {
-            $settings = Arr::mapWithKeys(
-                $values,
-                function (mixed $value, int|string $key) use ($default) {
-                    if (is_int($key)) {
-                        [$key, $value] = [$value, $default];
-                    }
+        $properties = $this->getCachedPropertyNames();
 
-                    return [
-                        $key => $value,
-                    ];
+        foreach ($properties as $name => $type) {
+            if (array_key_exists($name, $data)) {
+                $this->$name = filled($data[$name]) ? $this->castValue($data[$name], $type) : null;
+
+                if (! isset($this->initialSettings[$name])) {
+                    $this->initialSettings[$name] = $this->$name;
                 }
-            );
+            }
         }
-
-        $this->settingsManager()->fill($settings)->save();
 
         return $this;
     }
 
     /**
-     * Specify the settings group
+     * Get the updated settings
+     *
+     * @return array<string, mixed>
      */
-    public function group(string $group): self
+    private function getUpdated(): array
     {
-        return new self($this->manager, $group);
+        $properties = $this->getCachedPropertyNames();
+        $updatedSettings = [];
+
+        foreach (array_keys($properties) as $name) {
+            if (array_key_exists($name, $this->initialSettings) && $this->initialSettings[$name] !== $this->$name) {
+                $updatedSettings[$name] = $this->$name;
+            }
+        }
+
+        return $updatedSettings;
     }
 
     /**
-     * Manage the settings based on the specified group
+     * Get the public property names and their types.
+     *
+     * @return array<string, ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null>
      */
-    protected function settingsManager(): AbstractSettings
+    private function getCachedPropertyNames(): array
     {
-        $settings = $this->manager->resolveSettings($this->group);
-
-        if (blank($settings)) {
-            throw new RuntimeException("Settings group [$this->group] not found.");
+        if (blank($this->cachedPublicPropertyNames)) {
+            $this->cachedPublicPropertyNames = $this->resolvePublicProperties();
         }
 
-        return $settings;
+        return $this->cachedPublicPropertyNames;
+    }
+
+    /**
+     * Resolve the public properties and their types.
+     *
+     * @return array<string, null|ReflectionType>
+     */
+    protected function resolvePublicProperties(): array
+    {
+        $properties = new ReflectionClass($this)->getProperties(ReflectionProperty::IS_PUBLIC);
+
+        return collect($properties)
+            ->mapWithKeys(fn (ReflectionProperty $property) => [$property->name => $property->getType()])
+            ->reject(fn ($_, string $property) => $property === 'group')
+            ->all();
+    }
+
+    /**
+     * Cast the given value
+     *
+     * @param mixed $value The value to cast
+     * @param null|ReflectionIntersectionType|ReflectionNamedType|ReflectionUnionType $type The type to cast the value
+     */
+    private function castValue(mixed $value, null|\ReflectionIntersectionType|\ReflectionNamedType|\ReflectionUnionType $type): mixed
+    {
+        if ($type === null) {
+            return $value;
+        }
+
+        if ($type instanceof ReflectionIntersectionType) {
+            throw new InvalidArgumentException('Intersection types are not supported.');
+        }
+
+        if ($type instanceof ReflectionUnionType) {
+            $types = $type->getTypes();
+
+            if (count($types) > 1) {
+                throw new InvalidArgumentException('Union types with more than one type are not supported.');
+            }
+
+            $type = $types[0];
+        }
+
+        if ($type->allowsNull() && ($value === 'null' || $value === '')) {
+            return null;
+        }
+
+        return match ($type->getName()) {
+            'array' => (array) $value,
+            'int' => (int) $value,
+            'float' => (float) $value,
+            'bool' => (bool) $value,
+            'string' => (string) $value,
+            default => throw new InvalidArgumentException("Unsupported type casting: {$type->getName()}"),
+        };
+    }
+
+    /**
+     * Save the updated settings
+     */
+    final public function save(): void
+    {
+        $updatedSettings = $this->getUpdated();
+
+        if (filled($updatedSettings)) {
+            $this->repository->update($updatedSettings);
+
+            foreach ($updatedSettings as $name => $value) {
+                // save the old setting
+                $this->oldSettings[$name] = $this->initialSettings[$name];
+
+                // update the initial setting
+                $this->initialSettings[$name] = $value;
+            }
+        }
+    }
+
+    /**
+     * Get all the settings
+     *
+     * @return array<string, mixed>
+     */
+    final public function all(): array
+    {
+        return collect($this->initialSettings)
+            ->merge($this->getUpdated())
+            ->mapWithKeys(fn (mixed $payload, string $setting) => [$setting => $payload])
+            ->all();
+    }
+
+    /**
+     * Get the group name
+     */
+    public static function getGroup(): string
+    {
+        return Settings::DEFAULT_GROUP;
     }
 }

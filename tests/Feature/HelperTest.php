@@ -13,7 +13,7 @@ dataset('paths', [
     'stubs',
     'src',
     'src/helpers.php',
-    'src/AbstractSettings.php',
+    'src/Settings.php',
     'src/SettingsServiceProvider.php',
     'composer.json',
     'composer.lock',
@@ -77,7 +77,7 @@ describe('psr4 namespace to path helper', function () {
 describe('settings helper', function () {
     it('returns settings manager instance', function () {
         expect(settings())
-            ->toBeInstanceOf(Coyotito\LaravelSettings\Settings::class);
+            ->toBeInstanceOf(Coyotito\LaravelSettings\SettingsService::class);
     });
 
     it('treats settings(setting) as get, not set', function () {

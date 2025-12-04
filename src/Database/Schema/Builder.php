@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings\Database\Schema;
 
 use Closure;
-use Coyotito\LaravelSettings\AbstractSettings;
+use Coyotito\LaravelSettings\Settings;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Illuminate\Support\Arr;
 
@@ -18,7 +18,7 @@ use Illuminate\Support\Arr;
  */
 final class Builder
 {
-    public const string DEFAULT_GROUP = AbstractSettings::DEFAULT_GROUP;
+    public const string DEFAULT_GROUP = Settings::DEFAULT_GROUP;
 
     public function __construct(protected Repository $repo)
     {

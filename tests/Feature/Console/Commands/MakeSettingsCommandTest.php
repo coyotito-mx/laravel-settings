@@ -142,7 +142,7 @@ it('can create settings for a custom group', function () {
 
         namespace App\Settings;
 
-        use Coyotito\LaravelSettings\AbstractSettings as Settings;
+        use Coyotito\LaravelSettings\Settings;
 
         class Billing extends Settings
         {
