@@ -135,6 +135,7 @@ abstract class AbstractSettings
 
         return collect($properties)
             ->mapWithKeys(fn (ReflectionProperty $property) => [$property->name => $property->getType()])
+            ->reject(fn ($_, string $property) => $property === 'group')
             ->all();
     }
 
