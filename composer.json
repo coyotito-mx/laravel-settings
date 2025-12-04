@@ -7,10 +7,9 @@
         "php": "^8.4"
     },
     "require-dev": {
-          "barryvdh/laravel-ide-helper": "^3.6",
-          "larastan/larastan": "^3.7",
-          "laravel/pint": "^v1.25.1",
-          "orchestra/testbench": "^10.6",
+          "larastan/larastan": "^3.8",
+          "laravel/pint": "^v1.26.0",
+          "orchestra/testbench": "^10.8",
           "pestphp/pest": "v4.1.2",
           "pestphp/pest-plugin-laravel": "^4.0",
           "rector/rector": "^2.2"
