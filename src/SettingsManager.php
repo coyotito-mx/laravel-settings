@@ -184,6 +184,9 @@ class SettingsManager
         return $settings::getGroup();
     }
 
+    /**
+     * Clear all registered namespaces
+     */
     public function clearRegisteredNamespaces(): void
     {
         foreach (array_keys($this->namespaces) as $namespace) {
@@ -191,6 +194,11 @@ class SettingsManager
         }
     }
 
+    /**
+     * Clear a registered settings class
+     *
+     * @param class-string<AbstractSettings> $settings
+     */
     public function clearRegisteredSettingsClass(string $settings): void
     {
         $group = $this->resolveGroupName($settings);
@@ -205,7 +213,7 @@ class SettingsManager
     /**
      * Clear the resolved settings cache
      */
-    public function clearRegisteredSettings(): void
+    public function clearRegisteredSettingsClasses(): void
     {
         $this->clearRegisteredNamespaces();
 
