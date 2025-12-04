@@ -10,13 +10,13 @@ class DynamicSettings extends AbstractSettings
 {
     protected array $dynamicProperties = [];
 
-    public function __construct(protected Repository $repository, string $group = self::DEFAULT_GROUP)
+    public function __construct(protected Repository $repository)
     {
         $this->setDynamicSettings(
             $this->dynamicProperties = $this->repository->getAll()
         );
 
-        parent::__construct($repository, $group);
+        parent::__construct($repository, $this->repository->group);
     }
 
     protected function resolvePublicProperties(): array
