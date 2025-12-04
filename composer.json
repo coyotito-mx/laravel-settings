@@ -46,18 +46,7 @@
             "@style:test"
         ],
         "rector:dry": "@php vendor/bin/rector --ansi --dry-run",
-        "rector:fix": "@php vendor/bin/rector --ansi",
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@build",
-            "@php vendor/bin/testbench serve --ansi"
-        ]
+        "rector:fix": "@php vendor/bin/rector --ansi"
     },
     "config": {
         "preferred-install": "dist",
