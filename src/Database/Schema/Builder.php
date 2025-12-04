@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Database\Schema;
 
+use Closure;
+use Coyotito\LaravelSettings\AbstractSettings;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Illuminate\Support\Arr;
 
+/**
+ * Builder class
+ *
+ * Used to build settings schema operations
+ *
+ * @package Coyotito\LaravelSettings
+ */
 final class Builder
 {
-    public const string DEFAULT_GROUP = 'default';
+    public const string DEFAULT_GROUP = AbstractSettings::DEFAULT_GROUP;
 
     public function __construct(protected Repository $repo)
     {
@@ -20,12 +29,11 @@ final class Builder
      * Add settings to the given group
      *
      * @param string $group Name of the group
-     * @param \Closure(Blueprint $group): void $callback
-     * @return void
+     * @param Closure(Blueprint $group): void $callback
      */
-    public function in(string $group, \Closure $callback): void
+    public function in(string $group, Closure $callback): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup($group));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = $group);
         $blueprint = new Blueprint($repo);
 
         $callback($blueprint);
@@ -34,12 +42,11 @@ final class Builder
     /**
      * Add settings to the default group
      *
-     * @param \Closure(Blueprint $group): void $callback
-     * @return void
+     * @param Closure(Blueprint $group): void $callback
      */
-    public function default(\Closure $callback): void
+    public function default(Closure $callback): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = self::DEFAULT_GROUP);
         $blueprint = new Blueprint($repo);
 
         $callback($blueprint);
@@ -48,13 +55,13 @@ final class Builder
     /**
      * Delete setting(s) from the given group
      */
-    public function delete(string|array $settings, string $group = 'default'): void
+    public function delete(string|array $settings): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup(static::DEFAULT_GROUP));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = self::DEFAULT_GROUP);
         $blueprint = new Blueprint($repo);
 
         if (is_string($settings)) {
-            $setting = Arr::wrap($settings);
+            $settings = Arr::wrap($settings);
         }
 
         foreach ($settings as $setting) {
@@ -67,7 +74,7 @@ final class Builder
      */
     public function drop(string $group): void
     {
-        tap($this->repo, fn ($repo) => $repo->setGroup($group))->drop();
+        tap($this->repo, fn ($repo) => $repo->group = $group)->drop();
     }
 
     /**
@@ -75,7 +82,7 @@ final class Builder
      */
     public function rename(string $oldGroup, string $newGroup): void
     {
-        $repo = tap($this->repo, fn ($repo) => $repo->setGroup($oldGroup));
+        $repo = tap($this->repo, fn ($repo) => $repo->group = $oldGroup);
 
         $repo->renameGroup($newGroup);
     }

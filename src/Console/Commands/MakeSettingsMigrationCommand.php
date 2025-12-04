@@ -29,8 +29,6 @@ class MakeSettingsMigrationCommand extends Command
 
     /**
      * The type of file being generated.
-     *
-     * @var string
      */
     protected static string $type = 'migration';
 
