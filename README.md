@@ -3,6 +3,7 @@
 
 <p align="center">
 <img alt="Static Badge" src="https://img.shields.io/badge/PHP-%E2%89%A58.4-%234F5D95">
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/coyotito/laravel-settings" alt="Latest Stable Version"></a>
 <a href="https://github.com/coyotito-mx/laravel-settings/actions/workflows/tests.yml"><img src="https://github.com/coyotito-mx/laravel-settings/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
 <a href="https://github.com/coyotito-mx/laravel-settings/actions/workflows/lint.yml"><img src="https://github.com/coyotito-mx/laravel-settings/actions/workflows/lint.yml/badge.svg" alt="Build Status"></a>
 </p>
@@ -264,4 +265,4 @@ See `CONTRIBUTING.md` for details about contributing, tests and code style.
 
 ## License
 
-MIT — see `LICENSE.md`.
+The `Laravel Settings` package is open-sourced software licensed under the [MIT license](./LICENSE.md).
