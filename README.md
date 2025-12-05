@@ -265,4 +265,4 @@ See `CONTRIBUTING.md` for details about contributing, tests and code style.
 
 ## License
 
-MIT — see `LICENSE.md`.
+The `Laravel Settings` package is open-sourced software licensed under the [MIT license](./LICENSE.md).
