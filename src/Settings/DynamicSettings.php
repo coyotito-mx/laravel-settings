@@ -4,7 +4,6 @@ namespace Coyotito\LaravelSettings\Settings;
 
 use Coyotito\LaravelSettings\Settings;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use ReflectionNamedType;
 
 /**
  * A settings class that dynamically creates properties based on the settings stored in the repository.
@@ -30,53 +29,7 @@ class DynamicSettings extends Settings
     {
         return collect(get_object_vars($this))
             ->only(array_keys($this->dynamicProperties))
-            ->mapWithKeys(function (mixed $value, string $property): array {
-                $type = new class ($value) extends ReflectionNamedType {
-                    private const array BUILTIN_TYPES = [
-                        'integer',
-                        'double',
-                        'string',
-                        'boolean',
-                        'array',
-                        'object',
-                        'callable',
-                        'iterable',
-                        'null',
-                        'void',
-                        'never',
-                        'mixed',
-                        'false',
-                        'true',
-                    ];
-
-                    public function __construct(protected mixed $value)
-                    {
-                        //
-                    }
-
-                    public function getName(): string
-                    {
-                        return gettype($this->value);
-                    }
-
-                    public function isBuiltin(): bool
-                    {
-                        return self::BUILTIN_TYPES[$this->getName()] ?? false;
-                    }
-
-                    public function allowsNull(): bool
-                    {
-                        return true;
-                    }
-
-                    public function __toString(): string
-                    {
-                        return $this->getName();
-                    }
-                };
-
-                return [$property => $type];
-            })->toArray();
+            ->map(fn (mixed $value, string $property) => $property)->toArray();
     }
 
     private function setDynamicSettings(array $settings): void

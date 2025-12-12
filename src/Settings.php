@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
+use Closure;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionProperty;
-use ReflectionType;
 use ReflectionUnionType;
 
 /**
@@ -94,7 +93,11 @@ abstract class Settings
         return $this->massAssignment($settings);
     }
 
-    private function massAssignment(array $settings, ?\Closure $afterUpdatesSetting = null): static
+    /**
+     * @param ?Closure(mixed $value, string $setting): void $afterUpdatesSetting
+     * @return $this
+     */
+    private function massAssignment(array $settings, ?Closure $afterUpdatesSetting = null): static
     {
         $properties = $this->getCachedPropertyNames();
 
@@ -145,17 +148,17 @@ abstract class Settings
     }
 
     /**
-     * Resolve the public properties and their types.
+     * Resolve the public properties
      *
-     * @return array<string, null|ReflectionType>
+     * @return string[]
      */
     protected function resolvePublicProperties(): array
     {
         $properties = new ReflectionClass($this)->getProperties(ReflectionProperty::IS_PUBLIC);
 
         return collect($properties)
-            ->mapWithKeys(fn (ReflectionProperty $property) => [$property->name => $property->getType()])
-            ->reject(fn ($_, string $property) => $property === 'group')
+            ->map(fn (ReflectionProperty $property) => $property->name)
+            ->reject(fn (string $property) => $property === 'group')
             ->all();
     }
 
