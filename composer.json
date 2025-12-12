@@ -46,7 +46,15 @@
             "@style:test"
         ],
         "rector:dry": "@php vendor/bin/rector --ansi --dry-run",
-        "rector:fix": "@php vendor/bin/rector --ansi"
+        "rector:fix": "@php vendor/bin/rector --ansi",
+        "code:quality": [
+            "@lint:with-style",
+            "@rector:dry"
+        ],
+        "code:quality-fix": [
+            "@rector:fix",
+            "@style"
+        ]
     },
     "config": {
         "preferred-install": "dist",
