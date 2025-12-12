@@ -3,7 +3,6 @@
 use Coyotito\LaravelSettings\Facades\SettingsManager;
 use Illuminate\Support\Facades\File;
 
-use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {

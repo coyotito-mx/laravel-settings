@@ -15,7 +15,6 @@ use Coyotito\LaravelSettings\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
-use function Coyotito\LaravelSettings\Helpers\package_path;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
