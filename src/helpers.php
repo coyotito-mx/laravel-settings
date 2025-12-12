@@ -2,7 +2,6 @@
 
 namespace Coyotito\LaravelSettings\Helpers {
 
-    use Coyotito\LaravelSettings\SettingsManager;
     use Coyotito\LaravelSettings\SettingsService;
     use Illuminate\Support\Str;
 

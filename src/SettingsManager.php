@@ -7,7 +7,6 @@ namespace Coyotito\LaravelSettings;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_normalizer;

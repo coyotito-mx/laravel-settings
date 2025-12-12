@@ -72,25 +72,25 @@ describe('psr4 namespace to path helper', function () {
 });
 
 describe('psr4 namespace normalizer', function () {
-   it('normalize namespaces', function (string $namespace, string $normalized) {
-       expect(psr4_namespace_normalizer($namespace))->toBe($normalized);
-   })->with([
-       ['Coyotito\\SettingsManager', 'Coyotito\\SettingsManager\\'],
-       ['Coyotito\\Settings', 'Coyotito\\Settings\\'],
-       ['Coyotito\\Helper', 'Coyotito\\Helper\\'],
-       ['Coyotito\\Helpers', 'Coyotito\\Helpers\\'],
-       ['Coyotito\\Custom\\Namespace', 'Coyotito\\Custom\\Namespace\\'],
-   ]);
+    it('normalize namespaces', function (string $namespace, string $normalized) {
+        expect(psr4_namespace_normalizer($namespace))->toBe($normalized);
+    })->with([
+        ['Coyotito\\SettingsManager', 'Coyotito\\SettingsManager\\'],
+        ['Coyotito\\Settings', 'Coyotito\\Settings\\'],
+        ['Coyotito\\Helper', 'Coyotito\\Helper\\'],
+        ['Coyotito\\Helpers', 'Coyotito\\Helpers\\'],
+        ['Coyotito\\Custom\\Namespace', 'Coyotito\\Custom\\Namespace\\'],
+    ]);
 
-   it('normalize namespaces with already trailing separators', function (string $namespace, string $normalized) {
-       expect(psr4_namespace_normalizer($namespace))->toBe($normalized);
-   })->with([
-       ['Coyotito\\SettingsManager\\', 'Coyotito\\SettingsManager\\'],
-       ['\\Coyotito\\Settings\\', 'Coyotito\\Settings\\'],
-       ['\\\\Coyotito\\Helper', 'Coyotito\\Helper\\'],
-       ['\\Coyotito\\Helpers\\\\', 'Coyotito\\Helpers\\'],
-       ['\\Coyotito\\\\Custom\\Namespace\\', 'Coyotito\\\\Custom\\Namespace\\'],
-   ]);
+    it('normalize namespaces with already trailing separators', function (string $namespace, string $normalized) {
+        expect(psr4_namespace_normalizer($namespace))->toBe($normalized);
+    })->with([
+        ['Coyotito\\SettingsManager\\', 'Coyotito\\SettingsManager\\'],
+        ['\\Coyotito\\Settings\\', 'Coyotito\\Settings\\'],
+        ['\\\\Coyotito\\Helper', 'Coyotito\\Helper\\'],
+        ['\\Coyotito\\Helpers\\\\', 'Coyotito\\Helpers\\'],
+        ['\\Coyotito\\\\Custom\\Namespace\\', 'Coyotito\\\\Custom\\Namespace\\'],
+    ]);
 });
 
 describe('settings helper', function () {
