@@ -92,6 +92,22 @@ abstract class Settings
     }
 
     /**
+     * Update the given settings
+     */
+    public function update(array $settings): static
+    {
+        $properties = $this->getCachedPropertyNames();
+
+        foreach ($settings as $name => $value) {
+            if (array_key_exists($name, $properties)) {
+                $this->$name = $value;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * Get the updated settings
      *
      * @return array<string, mixed>
