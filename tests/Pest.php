@@ -55,7 +55,7 @@ expect()->extend('toBeInDirectory', function (string $directory) {
 expect()->extend('toBeClassSettings', function () {
     $class = class_basename($this->value);
 
-    $directory = psr4_namespace_to_path(Str::before($this->value, "\\{$class}"), package_path('vendor'));
+    $directory = psr4_namespace_to_path(Str::before($this->value, "\\{$class}"));
 
     expect($directory)
         ->not->toBeEmpty('The provided class namespace is invalid.')

@@ -19,7 +19,7 @@ afterEach(function () {
 });
 
 it('create settings class', function () {
-    SettingsManager::addNamespace('App\\Settings\\', app_path('Settings'));
+    SettingsManager::addNamespace('App\\Settings\\');
     expect(App\Settings\DefaultSettings::class)->not->toBeClassSettings();
 
     artisan('make:settings-class', ['name' => 'DefaultSettings'])
@@ -35,7 +35,7 @@ it('create settings class', function () {
 });
 
 it('create settings class in custom namespace', function () {
-    SettingsManager::addNamespace('App\\Custom\\Settings', app_path(join_paths('Custom', 'Settings')));
+    SettingsManager::addNamespace('App\\Custom\\Settings');
     expect(App\Custom\Settings\CustomSettings::class)->not->toBeClassSettings();
 
     artisan('make:settings-class', ['name' => 'CustomSettings', '--namespace' => 'App\\Custom\\Settings'])
@@ -52,7 +52,7 @@ it('create settings class in custom namespace', function () {
 });
 
 it('create settings class with specific group', function () {
-    SettingsManager::addNamespace('App\\Settings\\', app_path('Settings'));
+    SettingsManager::addNamespace('App\\Settings\\');
     expect(App\Settings\DefaultSettings::class)->not->toBeClassSettings();
 
     artisan('make:settings-class', ['--group' => 'my-group'])
@@ -69,7 +69,7 @@ it('create settings class with specific group', function () {
 });
 
 it('fails if class already exists', function () {
-    SettingsManager::addNamespace('App\\Settings\\', app_path('Settings'));
+    SettingsManager::addNamespace('App\\Settings\\');
     artisan('make:settings-class', ['name' => 'DefaultSettings'])
         ->assertSuccessful();
 

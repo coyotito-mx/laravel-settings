@@ -62,9 +62,6 @@ namespace Coyotito\LaravelSettings\Helpers {
      * Normalize the Namespace
      *
      * This normalization pairs with how Composer register PSR-4 namespaces, with a leading `\` only (escaped, actually);
-     *
-     * @param string $namespace
-     * @return string
      */
     function psr4_namespace_normalizer(string $namespace): string
     {
