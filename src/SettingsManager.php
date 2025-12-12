@@ -67,7 +67,7 @@ class SettingsManager
      */
     protected function getSettingsClasses(string $namespace, ?string $path): ?array
     {
-        $path = $path ?? psr4_namespace_to_path($namespace);
+        $path = $path ?? psr4_namespace_to_path($namespace, base_path('vendor'));
 
         if (blank($path)) {
             throw new InvalidArgumentException("Could not resolve path for namespace: $namespace");

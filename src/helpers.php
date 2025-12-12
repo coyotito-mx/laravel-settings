@@ -4,7 +4,7 @@ namespace Coyotito\LaravelSettings\Helpers
 {
 
     use Coyotito\LaravelSettings\SettingsService;
-    use Illuminate\Support\Collection;
+    use Illuminate\Contracts\Filesystem\FileNotFoundException;
     use Illuminate\Support\Facades\File;
     use Illuminate\Support\Str;
 
@@ -32,21 +32,20 @@ namespace Coyotito\LaravelSettings\Helpers
      * The namespace must be defined in composer.json `autoload.psr-4` and the path must exist in the base path.
      *
      * @param string $namespace The namespace to resolve to a path
+     * @param string $vendor   The absolute vendor path where to find the `composer/autoload_psr4.php` file
      *
      * @internal
      *
      */
-    function psr4_namespace_to_path(string $namespace): ?string
+    function psr4_namespace_to_path(string $namespace, string $vendor): ?string
     {
-        $namespaces = (function (): Collection {
-            $autoloadFile = 'vendor/composer/autoload_psr4.php';
+        $autoload = join_paths($vendor, 'composer/autoload_psr4.php');
 
-            $composerPath = app()->runningUnitTests()
-                ? package_path($autoloadFile)
-                : base_path($autoloadFile);
-
-            return collect(File::getRequire($composerPath))->map(fn (array $path): string => $path[0]);
-        })();
+        try {
+            $namespaces = collect(File::getRequire($autoload))->map(fn (array $path): string => $path[0]);
+        } catch (FileNotFoundException) {
+            return null;
+        }
 
         foreach ($namespaces as $prefix => $path) {
             $path = rtrim($path, '/\\');

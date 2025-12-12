@@ -51,7 +51,7 @@ describe('psr4 namespace to path helper', function () {
             'Coyotito\\SettingsManager' => [package_path('src')],
         ]);
 
-        expect(psr4_namespace_to_path('Coyotito\\SettingsManager'))
+        expect(psr4_namespace_to_path('Coyotito\\SettingsManager', package_path('vendor')))
             ->toBe(Testbench\package_path('src'));
     });
 
@@ -60,7 +60,7 @@ describe('psr4 namespace to path helper', function () {
             'Coyotito\\SettingsManager' => [package_path('src')],
         ]);
 
-        expect(psr4_namespace_to_path('Coyotito\\SettingsManager\Helpers'))
+        expect(psr4_namespace_to_path('Coyotito\\SettingsManager\Helpers', package_path('vendor')))
             ->toBe(package_path('src', 'Helpers'));
     });
 
@@ -69,7 +69,16 @@ describe('psr4 namespace to path helper', function () {
             'Coyotito\\SettingsManager' => [package_path('src')],
         ]);
 
-        expect(psr4_namespace_to_path('NonExistent\Namespace'))
+        expect(psr4_namespace_to_path('NonExistent\Namespace', package_path('vendor')))
+            ->toBeNull();
+    });
+
+    test('provided vendor path does not exist', function () {
+        $nonExistentVendorPath = package_path('non-vendor');
+
+        expect($nonExistentVendorPath)
+            ->not->toBeDirectory()
+            ->and(psr4_namespace_to_path('Coyotito\\SettingsManager', $nonExistentVendorPath))
             ->toBeNull();
     });
 });

@@ -125,7 +125,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function resolveNamespacePath(string $namespace): string
     {
-        if (blank($path = psr4_namespace_to_path($namespace))) {
+        if (blank($path = psr4_namespace_to_path($namespace, base_path('vendor')))) {
             throw new \InvalidArgumentException("The namespace [$namespace] does not exist.");
         }
 
