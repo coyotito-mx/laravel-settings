@@ -76,19 +76,14 @@ abstract class Settings
      */
     public function fill(array $data): static
     {
-        $properties = $this->getCachedPropertyNames();
-
-        foreach ($properties as $name => $type) {
-            if (array_key_exists($name, $data)) {
-                $this->$name = filled($data[$name]) ? $this->castValue($data[$name], $type) : null;
-
-                if (! isset($this->initialSettings[$name])) {
-                    $this->initialSettings[$name] = $this->$name;
+        return $this->massAssignment(
+            $data,
+            afterUpdatesSetting: function (mixed $value, string $setting) {
+                if (! isset($this->initialSettings[$setting])) {
+                    $this->initialSettings[$setting] = $this->$setting;
                 }
             }
-        }
-
-        return $this;
+        );
     }
 
     /**
@@ -96,11 +91,20 @@ abstract class Settings
      */
     public function update(array $settings): static
     {
+        return $this->massAssignment($settings);
+    }
+
+    private function massAssignment(array $settings, ?\Closure $afterUpdatesSetting = null): static
+    {
         $properties = $this->getCachedPropertyNames();
 
         foreach ($settings as $name => $value) {
             if (array_key_exists($name, $properties)) {
-                $this->$name = $value;
+                $this->$name = filled($value) ? $value : null;
+
+                if ($afterUpdatesSetting) {
+                    $afterUpdatesSetting(value: $this->$name, setting: $name);
+                }
             }
         }
 
@@ -153,46 +157,6 @@ abstract class Settings
             ->mapWithKeys(fn (ReflectionProperty $property) => [$property->name => $property->getType()])
             ->reject(fn ($_, string $property) => $property === 'group')
             ->all();
-    }
-
-    /**
-     * Cast the given value
-     *
-     * @param mixed $value The value to cast
-     * @param null|ReflectionIntersectionType|ReflectionNamedType|ReflectionUnionType $type The type to cast the value
-     */
-    private function castValue(mixed $value, null|\ReflectionIntersectionType|\ReflectionNamedType|\ReflectionUnionType $type): mixed
-    {
-        if ($type === null) {
-            return $value;
-        }
-
-        if ($type instanceof ReflectionIntersectionType) {
-            throw new InvalidArgumentException('Intersection types are not supported.');
-        }
-
-        if ($type instanceof ReflectionUnionType) {
-            $types = $type->getTypes();
-
-            if (count($types) > 1) {
-                throw new InvalidArgumentException('Union types with more than one type are not supported.');
-            }
-
-            $type = $types[0];
-        }
-
-        if ($type->allowsNull() && ($value === 'null' || $value === '')) {
-            return null;
-        }
-
-        return match ($type->getName()) {
-            'array' => (array) $value,
-            'int' => (int) $value,
-            'float' => (float) $value,
-            'bool' => (bool) $value,
-            'string' => (string) $value,
-            default => throw new InvalidArgumentException("Unsupported type casting: {$type->getName()}"),
-        };
     }
 
     /**
