@@ -111,10 +111,6 @@ class SettingsServiceProvider extends ServiceProvider
      */
     protected function publishConfig(): void
     {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
-
         $files = File::glob(package_path('config', '*.php'));
 
         if (blank($files)) {
@@ -126,9 +122,11 @@ class SettingsServiceProvider extends ServiceProvider
 
             $this->mergeConfigFrom($filepath, basename($filename, '.php'));
 
-            $this->publishes([
-                $filepath => config_path($filename),
-            ], 'laravel-settings-config');
+            if ($this->app->runningInConsole()) {
+                $this->publishes([
+                    $filepath => config_path($filename),
+                ], 'laravel-settings-config');
+            }
         });
     }
 
