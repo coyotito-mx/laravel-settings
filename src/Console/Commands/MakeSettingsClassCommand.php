@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings\Console\Commands;
 
 use Coyotito\LaravelSettings\Console\Commands\GeneratorCommand as Command;
+use Coyotito\LaravelSettings\Facades\SettingsManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
-
-use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 
 class MakeSettingsClassCommand extends Command
 {
@@ -125,7 +124,9 @@ class MakeSettingsClassCommand extends Command
      */
     protected function resolveNamespacePath(string $namespace): string
     {
-        if (blank($path = psr4_namespace_to_path($namespace))) {
+        $path = SettingsManager::resolveNamespacePath($namespace);
+
+        if (blank($path)) {
             throw new \InvalidArgumentException("The namespace [$namespace] does not exist.");
         }
 

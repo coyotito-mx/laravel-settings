@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 
+use function Coyotito\LaravelSettings\Helpers\psr4_namespace_normalizer;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Illuminate\Filesystem\join_paths;
 
@@ -41,19 +42,19 @@ class SettingsManager
     /**
      * Add a namespace and its corresponding path for Setting classes.
      */
-    public function addNamespace(string $namespace, ?string $path = null): void
+    public function addNamespace(string $namespace): void
     {
-        if (isset($this->namespaces[$namespace])) {
+        $namespace = psr4_namespace_normalizer($namespace);
+
+        $settingsClasses = $this->resolveSettingsClassesFromNamespace($namespace);
+
+        if ($settingsClasses === null) {
             return;
         }
 
-        $settingsClasses = $this->getSettingsClasses($namespace, $path);
-
-        if (blank($settingsClasses)) {
-            return;
-        }
-
-        $this->namespaces[$namespace] = $settingsClasses;
+        $this->namespaces[$namespace] = array_unique(
+            array_merge($settingsClasses, $this->namespaces[$namespace] ?? [])
+        );
 
         foreach ($settingsClasses as $settings) {
             $this->registerSettingsClass($settings);
@@ -64,14 +65,11 @@ class SettingsManager
      * Resolve the Setting classes in a given namespace.
      *
      * @return ?class-string<Settings>[]
+     * @throws InvalidArgumentException if the given path is an empty string
      */
-    protected function getSettingsClasses(string $namespace, ?string $path): ?array
+    protected function resolveSettingsClassesFromNamespace(string $namespace): ?array
     {
-        $path = $path ?? psr4_namespace_to_path($namespace);
-
-        if (blank($path)) {
-            throw new InvalidArgumentException("Could not resolve path for namespace: $namespace");
-        }
+        $path = $this->resolveNamespacePath($namespace);
 
         $files = File::glob(join_paths($path, '*.php'));
 
@@ -86,6 +84,14 @@ class SettingsManager
         });
 
         return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class));
+    }
+
+    /**
+     * Get the path resolved from the given namespace
+     */
+    public function resolveNamespacePath(string $namespace): ?string
+    {
+        return psr4_namespace_to_path($namespace);
     }
 
     /**
