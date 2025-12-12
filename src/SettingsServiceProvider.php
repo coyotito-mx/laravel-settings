@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings;
 
+use Composer\Autoload\ClassLoader;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
@@ -47,9 +48,7 @@ class SettingsServiceProvider extends ServiceProvider
             MakeSettingsMigrationCommand::class,
         ]);
 
-        Facades\SettingsManager::addNamespace(
-            $this->getSettingsRootNamespace(),
-        );
+        Facades\SettingsManager::addNamespace($this->getSettingsRootNamespace());
     }
 
     /**
@@ -57,6 +56,16 @@ class SettingsServiceProvider extends ServiceProvider
      */
     protected function registerBindings(): void
     {
+        $this->app->bind('class-loader', function (): ClassLoader {
+            $loader = ClassLoader::getRegisteredLoaders();
+
+            if (blank($loader)) {
+                throw new \RuntimeException('ClassLoader is not registered');
+            }
+
+            return array_first($loader);
+        });
+
         $this->app->bind('repository.eloquent', function (): EloquentRepository {
             $model = config('settings.repositories.eloquent.model');
 

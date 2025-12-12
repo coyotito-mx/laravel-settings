@@ -1,10 +1,16 @@
 <?php
 
+use Coyotito\LaravelSettings\Facades\SettingsManager;
+use Illuminate\Support\Facades\File;
+
+use function Illuminate\Filesystem\join_paths;
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {
     rmdir_recursive(app_path('Custom'));
     rmdir_recursive(app_path('Settings'), delete_root: false);
+
+    SettingsManager::clearRegisteredNamespaces();
 });
 
 afterEach(function () {
@@ -13,6 +19,7 @@ afterEach(function () {
 });
 
 it('create settings class', function () {
+    SettingsManager::addNamespace('App\\Settings\\', app_path('Settings'));
     expect(App\Settings\DefaultSettings::class)->not->toBeClassSettings();
 
     artisan('make:settings-class', ['name' => 'DefaultSettings'])
@@ -28,6 +35,7 @@ it('create settings class', function () {
 });
 
 it('create settings class in custom namespace', function () {
+    SettingsManager::addNamespace('App\\Custom\\Settings', app_path(join_paths('Custom', 'Settings')));
     expect(App\Custom\Settings\CustomSettings::class)->not->toBeClassSettings();
 
     artisan('make:settings-class', ['name' => 'CustomSettings', '--namespace' => 'App\\Custom\\Settings'])
@@ -44,6 +52,7 @@ it('create settings class in custom namespace', function () {
 });
 
 it('create settings class with specific group', function () {
+    SettingsManager::addNamespace('App\\Settings\\', app_path('Settings'));
     expect(App\Settings\DefaultSettings::class)->not->toBeClassSettings();
 
     artisan('make:settings-class', ['--group' => 'my-group'])
@@ -60,6 +69,7 @@ it('create settings class with specific group', function () {
 });
 
 it('fails if class already exists', function () {
+    SettingsManager::addNamespace('App\\Settings\\', app_path('Settings'));
     artisan('make:settings-class', ['name' => 'DefaultSettings'])
         ->assertSuccessful();
 

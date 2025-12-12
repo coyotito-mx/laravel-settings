@@ -1,11 +1,9 @@
 <?php
 
-namespace Coyotito\LaravelSettings\Helpers
-{
+namespace Coyotito\LaravelSettings\Helpers {
 
+    use Coyotito\LaravelSettings\SettingsManager;
     use Coyotito\LaravelSettings\SettingsService;
-    use Illuminate\Contracts\Filesystem\FileNotFoundException;
-    use Illuminate\Support\Facades\File;
     use Illuminate\Support\Str;
 
     use function Illuminate\Filesystem\join_paths;
@@ -21,7 +19,7 @@ namespace Coyotito\LaravelSettings\Helpers
         );
 
         return join_paths(
-            realpath(__DIR__.DIRECTORY_SEPARATOR.'..'),
+            realpath(__DIR__ . DIRECTORY_SEPARATOR . '..'),
             ...$path
         );
     }
@@ -32,33 +30,46 @@ namespace Coyotito\LaravelSettings\Helpers
      * The namespace must be defined in composer.json `autoload.psr-4` and the path must exist in the base path.
      *
      * @param string $namespace The namespace to resolve to a path
-     * @param string $vendor   The absolute vendor path where to find the `composer/autoload_psr4.php` file
      *
      * @internal
      *
      */
-    function psr4_namespace_to_path(string $namespace, string $vendor): ?string
+    function psr4_namespace_to_path(string $namespace): ?string
     {
-        $autoload = join_paths($vendor, 'composer/autoload_psr4.php');
+        $namespace = psr4_namespace_normalizer($namespace);
+        $namespaces = app('class-loader')->getPrefixesPsr4();
 
-        try {
-            $namespaces = collect(File::getRequire($autoload))->map(fn (array $path): string => $path[0]);
-        } catch (FileNotFoundException) {
-            return null;
+        if ($namespaces[$namespace] ?? null) {
+            return $namespaces[$namespace][0];
         }
 
-        foreach ($namespaces as $prefix => $path) {
-            $path = rtrim($path, '/\\');
+        $builtNamespace = '';
+        $namespaceSegments = Str::of($namespace)->explode('\\')->filter();
 
-            if (str_starts_with($namespace, rtrim($prefix, '\\'))) {
-                $remaining = Str::after($namespace, rtrim($prefix, '\\'));
-                $segments = $remaining === '' ? [] : array_filter(explode('\\', $remaining), filled(...));
+        foreach ($namespaceSegments as $segment) {
+            $builtNamespace .= "$segment\\";
 
-                return join_paths($path, ...$segments);
+            if (isset($namespaces[$builtNamespace])) {
+                $remainingSegments = Str::of($namespace)->replace($builtNamespace, '')->explode('\\')->filter();
+
+                return join_paths($namespaces[$builtNamespace][0], ...$remainingSegments);
             }
         }
 
         return null;
+    }
+
+    /**
+     * Normalize the Namespace
+     *
+     * This normalization pairs with how Composer register PSR-4 namespaces, with a leading `\` only (escaped, actually);
+     *
+     * @param string $namespace
+     * @return string
+     */
+    function psr4_namespace_normalizer(string $namespace): string
+    {
+        return (string) Str::of($namespace)->trim('\\')->append('\\');
     }
 
     /**
@@ -126,12 +137,12 @@ namespace Coyotito\LaravelSettings\Helpers
         }
 
         // If $setting is an array and not a list, a massive set is intended
-        if (is_array($setting) && ! array_is_list($setting)) {
+        if (is_array($setting) && !array_is_list($setting)) {
             return $service->set($setting, $default);
         }
 
         // If $default is not an array, is simple get
-        if (! is_array($default)) {
+        if (!is_array($default)) {
             return $service->get($setting, $default);
         }
 

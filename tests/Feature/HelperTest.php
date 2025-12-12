@@ -1,9 +1,11 @@
 <?php
 
+use Composer\Autoload\ClassLoader;
 use Coyotito\LaravelSettings\Facades\Settings;
 use Orchestra\Testbench;
 
 use function Coyotito\LaravelSettings\Helpers\package_path;
+use function Coyotito\LaravelSettings\Helpers\psr4_namespace_normalizer;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 use function Coyotito\LaravelSettings\Helpers\settings;
 
@@ -39,48 +41,56 @@ describe('package path helper', function () {
 });
 
 describe('psr4 namespace to path helper', function () {
-    function psr4_namespaces(array $namespaces = []): void
-    {
-        File::partialMock()
-            ->shouldReceive('getRequire')
-            ->andReturn($namespaces);
-    }
+    beforeEach(function () {
+        $loader = $this->app->make('class-loader');
+
+        $classLoader = Mockery::mock($loader)->makePartial();
+
+        $classLoader
+            ->shouldReceive('getPrefixesPsr4')
+            ->andReturn([
+                'Coyotito\\SettingsManager\\' => [package_path('src')]
+            ]);
+
+        $this->app->extend('class-loader', fn (ClassLoader $loader) => $classLoader);
+    });
 
     it('resolves root namespace to path', function () {
-        psr4_namespaces([
-            'Coyotito\\SettingsManager' => [package_path('src')],
-        ]);
-
-        expect(psr4_namespace_to_path('Coyotito\\SettingsManager', package_path('vendor')))
-            ->toBe(Testbench\package_path('src'));
+        expect(psr4_namespace_to_path('Coyotito\\SettingsManager'))
+            ->toBe(package_path('src'));
     });
 
     it('resolves sub-namespace to path', function () {
-        psr4_namespaces([
-            'Coyotito\\SettingsManager' => [package_path('src')],
-        ]);
-
-        expect(psr4_namespace_to_path('Coyotito\\SettingsManager\Helpers', package_path('vendor')))
+        expect(psr4_namespace_to_path('Coyotito\\SettingsManager\Helpers'))
             ->toBe(package_path('src', 'Helpers'));
     });
 
     it('returns null for non-existent namespace', function () {
-        psr4_namespaces([
-            'Coyotito\\SettingsManager' => [package_path('src')],
-        ]);
-
-        expect(psr4_namespace_to_path('NonExistent\Namespace', package_path('vendor')))
+        expect(psr4_namespace_to_path('NonExistent\Namespace'))
             ->toBeNull();
     });
+});
 
-    test('provided vendor path does not exist', function () {
-        $nonExistentVendorPath = package_path('non-vendor');
+describe('psr4 namespace normalizer', function () {
+   it('normalize namespaces', function (string $namespace, string $normalized) {
+       expect(psr4_namespace_normalizer($namespace))->toBe($normalized);
+   })->with([
+       ['Coyotito\\SettingsManager', 'Coyotito\\SettingsManager\\'],
+       ['Coyotito\\Settings', 'Coyotito\\Settings\\'],
+       ['Coyotito\\Helper', 'Coyotito\\Helper\\'],
+       ['Coyotito\\Helpers', 'Coyotito\\Helpers\\'],
+       ['Coyotito\\Custom\\Namespace', 'Coyotito\\Custom\\Namespace\\'],
+   ]);
 
-        expect($nonExistentVendorPath)
-            ->not->toBeDirectory()
-            ->and(psr4_namespace_to_path('Coyotito\\SettingsManager', $nonExistentVendorPath))
-            ->toBeNull();
-    });
+   it('normalize namespaces with already trailing separators', function (string $namespace, string $normalized) {
+       expect(psr4_namespace_normalizer($namespace))->toBe($normalized);
+   })->with([
+       ['Coyotito\\SettingsManager\\', 'Coyotito\\SettingsManager\\'],
+       ['\\Coyotito\\Settings\\', 'Coyotito\\Settings\\'],
+       ['\\\\Coyotito\\Helper', 'Coyotito\\Helper\\'],
+       ['\\Coyotito\\Helpers\\\\', 'Coyotito\\Helpers\\'],
+       ['\\Coyotito\\\\Custom\\Namespace\\', 'Coyotito\\\\Custom\\Namespace\\'],
+   ]);
 });
 
 describe('settings helper', function () {
