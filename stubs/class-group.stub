@@ -9,9 +9,10 @@ use Coyotito\LaravelSettings\Settings;
 class {{class}} extends Settings
 {
     /**
-     * Group name
+     * Get the group name
      */
-    public static function group(): string
+    #[\Override]
+    public static function getGroup(): string
     {
         return '{{group}}';
     }
