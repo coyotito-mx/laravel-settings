@@ -161,6 +161,14 @@ class SettingsManager
 
         $existingSettings = $this->registeredSettings[$group];
 
+        if ($existingSettings === $settings) {
+            throw new InvalidArgumentException(sprintf(
+                "Settings group '%s' already registered by class '%s'",
+                $settings::getGroup(),
+                class_basename($settings)
+            ));
+        }
+
         throw new InvalidArgumentException(sprintf(
             "Cannot register class '%s', '%s' already registered by class '%s'",
             class_basename($settings),
@@ -177,16 +185,6 @@ class SettingsManager
     public function resolveGroupName(string $settings): string
     {
         return $settings::getGroup();
-    }
-
-    /**
-     * Clear all registered namespaces
-     */
-    public function clearRegisteredNamespaces(): void
-    {
-        foreach (array_keys($this->namespaces) as $namespace) {
-            unset($this->namespaces[$namespace]);
-        }
     }
 
     /**
