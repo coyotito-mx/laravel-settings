@@ -9,7 +9,7 @@ beforeEach(function () {
     rmdir_recursive(app_path('Custom'));
     rmdir_recursive(app_path('Settings'), delete_root: false);
 
-    SettingsManager::clearRegisteredNamespaces();
+    SettingsManager::clearRegisteredSettingsClasses();
 });
 
 afterEach(function () {
@@ -80,8 +80,8 @@ it('fails if class already exists', function () {
 it('cannot create non-namespaced class', function () {
     expect(
         fn () =>
-        artisan('make:settings-class', ['name' => 'NonNamespaced', '--namespace' => ''])->assertFailed()
-    )->toThrow(InvalidArgumentException::class, 'The namespace [] does not exist.');
+        artisan('make:settings-class', ['name' => 'NonNamespaced', '--namespace' => 'Non\\Existing\\Namespace\\'])->assertFailed()
+    )->toThrow(InvalidArgumentException::class, 'The namespace [Non\\Existing\\Namespace\\] does not exist.');
 });
 
 it('cannot create class with reserved name', function () {
