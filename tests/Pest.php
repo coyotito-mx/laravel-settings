@@ -75,6 +75,16 @@ expect()->extend('toBeClassSettings', function () {
 |
 */
 /**
+ * Prefix the given class name with a unique string
+ *
+ * This will help to avoid issues with already defined classes (FQCN)
+ */
+function makeUniqueClassName(string $class): string
+{
+    return (string) Str::of($class)->append(Str::random());
+}
+
+/**
  * Delete folder recursively
  *
  * @param string $directory The root directory to delete
@@ -87,7 +97,7 @@ function rmdir_recursive(string $directory, bool $delete_root = true): bool
     }
 
     if (! is_dir($directory)) {
-        throw new RuntimeException('The provided path is not a directory');
+        throw new RuntimeException("The provided path '$directory' is not a directory");
     }
 
     $walk = static function (string $root, bool $delete_root) use (&$walk): bool {
@@ -115,7 +125,7 @@ function rmdir_recursive(string $directory, bool $delete_root = true): bool
             }
         }
 
-        return $delete_root ? rmdir($root) : true;
+        return !$delete_root || rmdir($root);
     };
 
     return $walk($directory, $delete_root);
