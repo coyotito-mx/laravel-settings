@@ -86,7 +86,7 @@ class MakeSettingsClassCommand extends Command
         return [
             ...parent::getReplacements(),
             '{{class}}' => $this->getClassName(),
-            '{{namespace}}' => $this->getNamespace(),
+            '{{namespace}}' => trim($this->getNamespace(), '\\'),
         ];
     }
 
@@ -103,8 +103,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function getNamespace(): string
     {
-        /** @var string $rootNamespace */
-        $rootNamespace = $this->option('namespace') ?? $this->getDefaultNamespace();
+        $rootNamespace = $this->option('namespace') ? SettingsManager::normalizeNamespace($this->option('namespace')) : $this->getDefaultNamespace();
 
         $this->ensureNotReserved($rootNamespace, 'namespace');
 
@@ -116,7 +115,7 @@ class MakeSettingsClassCommand extends Command
      */
     protected function getDefaultNamespace(): string
     {
-        return "App\\Settings";
+        return "App\\Settings\\";
     }
 
     /**

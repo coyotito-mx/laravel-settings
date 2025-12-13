@@ -37,7 +37,7 @@ class SettingsManager
      */
     public function addNamespace(string $namespace): void
     {
-        $namespace = psr4_namespace_normalizer($namespace);
+        $namespace = $this->normalizeNamespace($namespace);
 
         $settingsClasses = $this->resolveSettingsClassesFromNamespace($namespace);
 
@@ -69,7 +69,7 @@ class SettingsManager
         $classes = Arr::map($files, function (string $file) use ($namespace): string {
             $className = pathinfo($file, PATHINFO_FILENAME);
 
-            return psr4_namespace_normalizer($namespace).$className;
+            return $this->normalizeNamespace($namespace).$className;
         });
 
         return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class));
@@ -212,5 +212,10 @@ class SettingsManager
         foreach ($this->registeredSettings as $settings) {
             $this->clearRegisteredSettingsClass($settings);
         }
+    }
+
+    public function normalizeNamespace(string $namespace): string
+    {
+        return psr4_namespace_normalizer($namespace);
     }
 }
