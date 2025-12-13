@@ -21,13 +21,6 @@ use function Illuminate\Filesystem\join_paths;
 class SettingsManager
 {
     /**
-     * Registered namespaces and their corresponding Setting classes.
-     *
-     * @var array <string, class-string<Settings>[]>
-     */
-    protected array $namespaces = [];
-
-    /**
      * Registered Setting classes by their group names.
      *
      * @var array<string, class-string<Settings>>
@@ -51,10 +44,6 @@ class SettingsManager
         if ($settingsClasses === null) {
             return;
         }
-
-        $this->namespaces[$namespace] = array_unique(
-            array_merge($settingsClasses, $this->namespaces[$namespace] ?? [])
-        );
 
         foreach ($settingsClasses as $settings) {
             $this->registerSettingsClass($settings);
@@ -80,7 +69,7 @@ class SettingsManager
         $classes = Arr::map($files, function (string $file) use ($namespace): string {
             $className = pathinfo($file, PATHINFO_FILENAME);
 
-            return "$namespace\\$className";
+            return psr4_namespace_normalizer($namespace).$className;
         });
 
         return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class));
@@ -166,17 +155,17 @@ class SettingsManager
     {
         $group = $this->resolveGroupName($settings);
 
-        if (! $this->app->has($group)) {
+        if (! ($this->registeredSettings[$group] ?? null)) {
             return;
         }
 
         $existingSettings = $this->registeredSettings[$group];
 
         throw new InvalidArgumentException(sprintf(
-            'Settings group "%s" is already registered by class "%s". Cannot register class "%s" with the same group.',
-            $existingSettings::getGroup(),
+            "Cannot register class '%s', '%s' already registered by class '%s'",
             class_basename($settings),
-            $settings,
+            $existingSettings::getGroup(),
+            class_basename($existingSettings),
         ));
     }
 
@@ -213,7 +202,8 @@ class SettingsManager
             return;
         }
 
-        $this->app->forgetInstance($settings);
+        unset($this->registeredSettings[$group]);
+        tap($this->app, fn ($app) => $app->offsetUnset($settings))->offsetUnset($group);
     }
 
     /**
@@ -221,8 +211,6 @@ class SettingsManager
      */
     public function clearRegisteredSettingsClasses(): void
     {
-        $this->clearRegisteredNamespaces();
-
         foreach ($this->registeredSettings as $settings) {
             $this->clearRegisteredSettingsClass($settings);
         }
