@@ -147,9 +147,10 @@ it('can create settings for a custom group', function () {
         class Billing extends Settings
         {
             /**
-             * Group name
+             * Get the group name
              */
-            public static function group(): string
+            #[\Override]
+            public static function getGroup(): string
             {
                 return 'billing';
             }
