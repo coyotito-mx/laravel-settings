@@ -18,9 +18,7 @@ class DynamicSettings extends Settings
 
     public function __construct(protected Repository $repository)
     {
-        $this->setDynamicSettings(
-            $this->dynamicProperties = $this->repository->getAll()
-        );
+        $this->setDynamicSettings($this->repository->getAll());
 
         parent::__construct($repository, $this->repository->group);
     }
@@ -29,27 +27,23 @@ class DynamicSettings extends Settings
     {
         return collect(get_object_vars($this))
             ->only(array_keys($this->dynamicProperties))
-            ->map(fn (mixed $value, string $property) => $property)->toArray();
+            ->keys()
+            ->toArray();
     }
 
     private function setDynamicSettings(array $settings): void
     {
-        $this->repository->insert(
-            $this->prepareSettings($settings)
-        );
+        $settings = array_is_list($settings) ? array_fill_keys($settings, null) : $settings;
 
-        foreach ($settings as $key => $value) {
-            $this->set($key, $value);
+        foreach ($settings as $name => $value) {
+            $this->$name = $value;
         }
+
+        $this->dynamicProperties = $settings;
     }
 
-    private function set(string $key, $value): void
+    public function regenerate(): self
     {
-        $this->$key = $value;
-    }
-
-    private function prepareSettings(array $settings): array
-    {
-        return array_map(fn ($payload) => $payload, $settings);
+        return new static($this->repository);
     }
 }
