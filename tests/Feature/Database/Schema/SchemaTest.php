@@ -4,18 +4,23 @@ use Coyotito\LaravelSettings\Database\Schema\Blueprint;
 use Coyotito\LaravelSettings\Facades\Settings;
 use Coyotito\LaravelSettings\Facades\Schema;
 
-use function Coyotito\LaravelSettings\Helpers\settings;
+use Coyotito\LaravelSettings\Settings\DynamicSettings;
 
 it('can add settings', function () {
-    Settings::fake();
+    $settings = with(
+        Settings::fake(),
+        function (DynamicSettings $settings) {
+            Schema::default(function (Blueprint $group) {
+                $group->add('foo', 'bar');
+                $group->add('bar', 'baz');
+                $group->add('baz', 'foobar');
+            });
 
-    Schema::default(function (Blueprint $group) {
-        $group->add('foo', 'bar');
-        $group->add('bar', 'baz');
-        $group->add('baz', 'foobar');
-    });
+            return $settings->regenerate();
+        }
+    );
 
-    expect(settings())
+    expect($settings)
         ->get('foo')
         ->toBe('bar')
         ->get('bar')
@@ -25,15 +30,21 @@ it('can add settings', function () {
 });
 
 it('can add settings to group', function () {
-    Settings::fake(group: 'foo');
 
-    Schema::in('foo', function (Blueprint $group) {
-        $group->add('foo', 'bar');
-        $group->add('bar', 'baz');
-        $group->add('baz', 'foobar');
-    });
+    $settings = with(
+        Settings::fake(),
+        function (DynamicSettings $settings) {
+            Schema::in('foo', function (Blueprint $group) {
+                $group->add('foo', 'bar');
+                $group->add('bar', 'baz');
+                $group->add('baz', 'foobar');
+            });
 
-    expect(settings()->group('foo'))
+            return $settings->regenerate();
+        }
+    );
+
+    expect($settings)
         ->get('foo')
         ->toBe('bar')
         ->get('bar')
@@ -43,7 +54,7 @@ it('can add settings to group', function () {
 });
 
 it('can remove settings', function () {
-    Settings::fake([
+    $settings = Settings::fake([
         'foo' => 'bar',
         'bar' => 'baz',
         'baz' => 'foobar',
@@ -51,7 +62,7 @@ it('can remove settings', function () {
 
     Schema::delete(['bar']);
 
-    expect(settings())
+    expect($settings->regenerate())
         ->get('foo')
         ->toBe('bar')
         ->get('bar')
@@ -61,7 +72,7 @@ it('can remove settings', function () {
 });
 
 it('can remove settings from group', function () {
-    Settings::fake([
+    $settings = Settings::fake([
         'foo' => 'bar',
         'bar' => 'baz',
         'baz' => 'foobar',
@@ -71,7 +82,7 @@ it('can remove settings from group', function () {
         $group->remove('bar');
     });
 
-    expect(settings()->group('foo'))
+    expect($settings->regenerate())
         ->get('foo')
         ->toBe('bar')
         ->get('bar')
@@ -81,7 +92,7 @@ it('can remove settings from group', function () {
 });
 
 it('can drop settings', function () {
-    Settings::fake([
+    $settings = Settings::fake([
         'foo' => 'bar',
         'bar' => 'baz',
         'baz' => 'foobar',
@@ -89,7 +100,7 @@ it('can drop settings', function () {
 
     Schema::drop(\Coyotito\LaravelSettings\Settings::DEFAULT_GROUP);
 
-    expect(settings())
+    expect($settings->regenerate())
         ->get('foo')
         ->toBeNull()
         ->get('bar')
@@ -99,7 +110,7 @@ it('can drop settings', function () {
 });
 
 it('can drop settings from group', function () {
-    Settings::fake([
+    $settings = Settings::fake([
         'foo' => 'bar',
         'bar' => 'baz',
         'baz' => 'foobar',
@@ -107,7 +118,7 @@ it('can drop settings from group', function () {
 
     Schema::drop('foo');
 
-    expect(settings()->group('foo'))
+    expect($settings->regenerate())
         ->get('foo')
         ->toBeNull()
         ->get('bar')
