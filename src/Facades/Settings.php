@@ -22,9 +22,15 @@ class Settings extends Facade
     /**
      * Fake a settings class with the given data for testing purposes
      */
-    public static function fake(array $data = [], string $group = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP): void
+    public static function fake(array $data = [], string $group = \Coyotito\LaravelSettings\Settings::DEFAULT_GROUP): DynamicSettings
     {
-        SettingsManager::clearRegisteredSettingsClasses();
+        /**
+         * @var \Coyotito\LaravelSettings\SettingsManager $manager
+         */
+        $manager = tap(
+            static::$app->make('settings.manager'),
+            fn ($manager) => $manager->clearRegisteredSettingsClasses()
+        );
 
         static::$app->forgetInstance(Repository::class);
         static::$app->scoped(
@@ -35,7 +41,10 @@ class Settings extends Facade
             )
         );
 
-        SettingsManager::registerSettingsClass(DynamicSettings::class, $group);
+        return tap(
+            $manager,
+            fn ($manager) => $manager->registerSettingsClass(DynamicSettings::class, $group)
+        )->resolveSettings($group);
     }
 
     /**
