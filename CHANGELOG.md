@@ -1,5 +1,12 @@
 # Release Notes
 
+## v0.1.1 - 2025-12-14
+
+### What's changed
+
+- [FIX]: Update/Saving functionality of the base `Settings` class by [@asciito](https://github.com/asciito) in #30
+- [FIX]: Settings class registration by [@asciito](https://github.com/asciito) in #29
+
 ## v0.1.0 - 2025-12-12
 
 ### What's changed
