@@ -12,7 +12,7 @@ use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
  *
  * @package Coyotito\LaravelSettings
  */
-class DynamicSettings extends Settings
+final class DynamicSettings extends Settings
 {
     protected array $dynamicProperties = [];
 
@@ -44,6 +44,6 @@ class DynamicSettings extends Settings
 
     public function regenerate(): self
     {
-        return new static($this->repository);
+        return new self($this->repository);
     }
 }

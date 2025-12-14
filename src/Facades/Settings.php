@@ -41,10 +41,12 @@ class Settings extends Facade
             )
         );
 
-        return tap(
-            $manager,
-            fn ($manager) => $manager->registerSettingsClass(DynamicSettings::class, $group)
-        )->resolveSettings($group);
+        $manager->registerSettingsClass(DynamicSettings::class, $group);
+
+        /** @var DynamicSettings $settings */
+        $settings = $manager->resolveSettings($group);
+
+        return $settings;
     }
 
     /**

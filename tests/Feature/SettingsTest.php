@@ -10,16 +10,16 @@ beforeEach(function () {
 });
 
 it('can get settings', function () {
-   $settings = Settings::fake([
-       'foo' => 'bar',
-       'bar' => 'baz',
-   ]);
+    $settings = Settings::fake([
+        'foo' => 'bar',
+        'bar' => 'baz',
+    ]);
 
-   expect($settings)
-       ->foo->toBe('bar')
-       ->bar->toBe('baz')
-       ->get('foo')->toBe('bar')
-       ->get('bar')->toBe('baz');
+    expect($settings)
+        ->foo->toBe('bar')
+        ->bar->toBe('baz')
+        ->get('foo')->toBe('bar')
+        ->get('bar')->toBe('baz');
 });
 
 it('can update settings', function () {

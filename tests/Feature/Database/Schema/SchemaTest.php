@@ -3,7 +3,6 @@
 use Coyotito\LaravelSettings\Database\Schema\Blueprint;
 use Coyotito\LaravelSettings\Facades\Settings;
 use Coyotito\LaravelSettings\Facades\Schema;
-
 use Coyotito\LaravelSettings\Settings\DynamicSettings;
 
 it('can add settings', function () {

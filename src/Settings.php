@@ -7,10 +7,7 @@ namespace Coyotito\LaravelSettings;
 use Closure;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use ReflectionClass;
-use ReflectionIntersectionType;
-use ReflectionNamedType;
 use ReflectionProperty;
-use ReflectionUnionType;
 
 /**
  * Base class for application settings with automatic persistence.
@@ -125,7 +122,7 @@ abstract class Settings
         $updatedSettings = [];
 
         foreach ($properties as $name) {
-            if (key_exists($name, $this->initialSettings) && $this->initialSettings[$name] !== $this->$name) {
+            if (array_key_exists($name, $this->initialSettings) && $this->initialSettings[$name] !== $this->$name) {
                 $updatedSettings[$name] = $this->$name;
             }
         }
@@ -136,7 +133,7 @@ abstract class Settings
     /**
      * Get the public property names and their types.
      *
-     * @return array<string, ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null>
+     * @return string[]
      */
     private function getCachedPropertyNames(): array
     {
