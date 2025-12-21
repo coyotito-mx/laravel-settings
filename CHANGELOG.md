@@ -1,5 +1,11 @@
 # Release Notes
 
+## v0.1.2 - 2025-12-21
+
+### What's changed
+
+- [HOTFIX]: Root namespace by [@asciito](https://github.com/asciito) in #33
+
 ## v0.1.1 - 2025-12-14
 
 ### What's changed
