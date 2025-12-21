@@ -1,6 +1,7 @@
 <?php
 
 use Coyotito\LaravelSettings\Facades\SettingsManager;
+use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
 use Coyotito\LaravelSettings\Settings;
 
 use function Pest\Laravel\artisan;
@@ -26,6 +27,19 @@ dataset('classnames', [
     'UserSettings',
     'AdminSettings',
 ]);
+
+it('can load settings', function () {
+    artisan('make:settings-class', ['name' => 'DefaultSettings'])
+        ->assertSuccessful();
+
+    $this->refreshApplication();
+
+    \Coyotito\LaravelSettings\Facades\Settings::swapRepository(new InMemoryRepository);
+
+    expect(SettingsManager::getFacadeRoot())
+        ->resolveSettings('default')
+        ->toBeInstanceOf(Settings::class);
+});
 
 it('can register settings from namespace', function (string $class, string $namespace) {
     $class = makeUniqueClassName($class);

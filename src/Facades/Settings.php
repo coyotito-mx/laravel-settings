@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Coyotito\LaravelSettings\Facades;
 
+use Closure;
 use Coyotito\LaravelSettings\SettingsService as SettingsService;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
@@ -32,9 +33,7 @@ class Settings extends Facade
             fn ($manager) => $manager->clearRegisteredSettingsClasses()
         );
 
-        static::$app->forgetInstance(Repository::class);
-        static::$app->scoped(
-            Repository::class,
+        static::swapRepository(
             fn () => tap(
                 new InMemoryRepository($group),
                 fn ($repo) => $data && $repo->insert($data)
@@ -47,6 +46,15 @@ class Settings extends Facade
         $settings = $manager->resolveSettings($group);
 
         return $settings;
+    }
+
+    public static function swapRepository(Closure|Repository $concrete): void
+    {
+        static::$app->forgetInstance(Repository::class);
+        static::$app->scoped(
+            Repository::class,
+            $concrete instanceof Closure ? $concrete : fn () => $concrete
+        );
     }
 
     /**
