@@ -159,3 +159,54 @@ it('can register settings class', function (string $className) {
         ->toBeInstanceOf($fqcn)
         ->toBeInstanceOf(Settings::class);
 })->with('classnames');
+
+it('cannot re-register namespace will not load any new settings class', function () {
+    /** @var \Coyotito\LaravelSettings\SettingsManager $settingsManager */
+    $settingsManager = SettingsManager::getFacadeRoot();
+    $defaultSettings = makeUniqueClassName('DefaultSettings');
+    $testSettings = makeUniqueClassName('TestSettings');
+
+    artisan('make:settings-class', ['name' => $defaultSettings]);
+
+    $settingsManager->addNamespace('App\\Settings\\');
+
+    artisan('make:settings-class', ['name' => $testSettings, '--group' => 'test']);
+
+    $settingsManager->addNamespace('App\\Settings\\');
+
+    expect($settingsManager)
+        ->resolveSettings('default')
+        ->toBeInstanceOf(Settings::class)
+        ->resolveSettings('test')
+        ->toBeNull();
+});
+
+it('clear namespace settings', function (string $namespace) {
+    /** @var SettingsManager $settingsManager */
+    $settingsManager = SettingsManager::getFacadeRoot();
+
+    artisan('make:settings-class', ['name' => 'DefaultSettings', '--namespace' => $namespace]);
+    artisan('make:settings-class', ['name' => 'TestSettings', '--namespace' => $namespace, '--group' => 'test']);
+
+    $settingsManager->addNamespace($namespace);
+
+    expect($settingsManager)
+        ->resolveSettings('default')
+        ->not->toBeNull()
+        ->toBeInstanceOf(Settings::class)
+        ->resolveSettings('test')
+        ->not->toBeNull()
+        ->toBeInstanceOf(Settings::class);
+
+    $settingsManager->clearNamespaceSettings($namespace);
+
+    expect($settingsManager)
+        ->resolveSettings('default')
+        ->toBeNull()
+        ->resolveSettings('test')
+        ->toBeNull();
+})->with([
+    'App\\Settings\\',
+    'App\\Custom\\Settings\\',
+    'App\\Custom\\Long\\Namespace\\',
+]);

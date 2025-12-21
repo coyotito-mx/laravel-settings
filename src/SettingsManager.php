@@ -20,6 +20,8 @@ use function Illuminate\Filesystem\join_paths;
  */
 class SettingsManager
 {
+    protected array $namespaces = [];
+
     /**
      * Registered Setting classes by their group names.
      *
@@ -37,16 +39,18 @@ class SettingsManager
      */
     public function addNamespace(string $namespace): void
     {
-        $namespace = $this->normalizeNamespace($namespace);
-
-        $settingsClasses = $this->resolveSettingsClassesFromNamespace($namespace);
-
-        if ($settingsClasses === null) {
+        if (array_key_exists($namespace, $this->namespaces)) {
             return;
         }
 
-        foreach ($settingsClasses as $settings) {
-            $this->registerSettingsClass($settings);
+        $settings = $this->resolveSettingsClassesFromNamespace($namespace);
+
+        if (blank($settings)) {
+            return;
+        }
+
+        foreach ($settings as $setting) {
+            $this->registerSettingsClass($setting);
         }
     }
 
@@ -72,7 +76,24 @@ class SettingsManager
             return $this->normalizeNamespace($namespace).$className;
         });
 
-        return Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class));
+        return with(
+            Arr::reject($classes, fn (string $class): bool => ! is_subclass_of($class, Settings::class)),
+            function (array $settings) use ($namespace): ?array {
+                if (blank($settings)) {
+                    return null;
+                }
+
+                $this->registerNamespaceSettings($namespace, $settings);
+
+                return $settings;
+            }
+        );
+    }
+
+
+    protected function registerNamespaceSettings(string $namespace, array $settings): void
+    {
+        $this->namespaces[$namespace] = $settings;
     }
 
     /**
@@ -209,8 +230,28 @@ class SettingsManager
      */
     public function clearRegisteredSettingsClasses(): void
     {
+        $this->clearNamespacesSettings();
+
         foreach ($this->registeredSettings as $settings) {
             $this->clearRegisteredSettingsClass($settings);
+        }
+    }
+
+    public function clearNamespaceSettings(string $namespace): void
+    {
+        $namespace = $this->normalizeNamespace($namespace);
+
+        foreach ($this->namespaces[$namespace] ?? [] as $settings) {
+            $this->clearRegisteredSettingsClass($settings);
+        }
+    }
+
+    public function clearNamespacesSettings(): void
+    {
+        foreach ($this->namespaces as $namespace => $settings) {
+            $this->clearNamespaceSettings($namespace);
+
+            unset($this->namespaces[$namespace]);
         }
     }
 
