@@ -161,7 +161,7 @@ class SettingsServiceProvider extends ServiceProvider
      */
     protected function getSettingsRootNamespace(): string
     {
-        $root = $this->app->getNamespace();
+        $root = trim($this->app->getNamespace(), '\\');
 
         return "$root\\Settings";
     }
