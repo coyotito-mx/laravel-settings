@@ -185,8 +185,8 @@ it('clear namespace settings', function (string $namespace) {
     /** @var SettingsManager $settingsManager */
     $settingsManager = SettingsManager::getFacadeRoot();
 
-    artisan('make:settings-class', ['name' => 'DefaultSettings', '--namespace' => $namespace]);
-    artisan('make:settings-class', ['name' => 'TestSettings', '--namespace' => $namespace, '--group' => 'test']);
+    artisan('make:settings-class', ['name' => makeUniqueClassName('DefaultSettings'), '--namespace' => $namespace]);
+    artisan('make:settings-class', ['name' => makeUniqueClassName('TestSettings'), '--namespace' => $namespace, '--group' => 'test']);
 
     $settingsManager->addNamespace($namespace);
 
