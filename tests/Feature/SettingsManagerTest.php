@@ -34,7 +34,7 @@ it('can load settings', function () {
 
     $this->refreshApplication();
 
-    \Coyotito\LaravelSettings\Facades\Settings::swapRepository(new InMemoryRepository);
+    \Coyotito\LaravelSettings\Facades\Settings::swapRepository(new InMemoryRepository());
 
     expect(SettingsManager::getFacadeRoot())
         ->resolveSettings('default')
