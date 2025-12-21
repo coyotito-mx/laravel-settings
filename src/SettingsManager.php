@@ -20,6 +20,11 @@ use function Illuminate\Filesystem\join_paths;
  */
 class SettingsManager
 {
+    /**
+     * The registered namespaces
+     *
+     * @var string[]
+     */
     protected array $namespaces = [];
 
     /**
@@ -39,7 +44,7 @@ class SettingsManager
      */
     public function addNamespace(string $namespace): void
     {
-        if (array_key_exists($namespace, $this->namespaces)) {
+        if (in_array($namespace, $this->namespaces, true)) {
             return;
         }
 
@@ -83,17 +88,11 @@ class SettingsManager
                     return null;
                 }
 
-                $this->registerNamespaceSettings($namespace, $settings);
+                $this->namespaces[] = $namespace;
 
                 return $settings;
             }
         );
-    }
-
-
-    protected function registerNamespaceSettings(string $namespace, array $settings): void
-    {
-        $this->namespaces[$namespace] = $settings;
     }
 
     /**
@@ -234,28 +233,10 @@ class SettingsManager
      */
     public function clearRegisteredSettingsClasses(): void
     {
-        $this->clearNamespacesSettings();
+        $this->namespaces = [];
 
         foreach ($this->registeredSettings as $settings) {
             $this->clearRegisteredSettingsClass($settings);
-        }
-    }
-
-    public function clearNamespaceSettings(string $namespace): void
-    {
-        $namespace = $this->normalizeNamespace($namespace);
-
-        foreach ($this->namespaces[$namespace] ?? [] as $settings) {
-            $this->clearRegisteredSettingsClass($settings);
-        }
-    }
-
-    public function clearNamespacesSettings(): void
-    {
-        foreach ($this->namespaces as $namespace => $settings) {
-            $this->clearNamespaceSettings($namespace);
-
-            unset($this->namespaces[$namespace]);
         }
     }
 
