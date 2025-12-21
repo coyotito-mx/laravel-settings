@@ -41,6 +41,22 @@ it('can load settings', function () {
         ->toBeInstanceOf(Settings::class);
 });
 
+
+it('resolve settings by FQCN', function (string $class) {
+    /** @var \Coyotito\LaravelSettings\SettingsManager $settingsManager */
+    $settingsManager = SettingsManager::getFacadeRoot();
+    $class = makeUniqueClassName($class);
+
+    artisan('make:settings-class', ['name' => $class, '--namespace' => $namespace = '\\App\\Custom\\Settings']);
+
+    $settingsManager->registerSettingsClass("$namespace\\$class");
+
+    expect($settingsManager)
+        ->resolveSettings("$namespace\\$class")
+        ->not->toBeNull()
+        ->toBeInstanceOf(Settings::class);
+})->with('classnames');
+
 it('can register settings from namespace', function (string $class, string $namespace) {
     $class = makeUniqueClassName($class);
 

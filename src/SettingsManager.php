@@ -158,11 +158,15 @@ class SettingsManager
     /**
      * Resolve the settings instance from the given group
      */
-    public function resolveSettings(string $group): ?Settings
+    public function resolveSettings(string $settings): ?Settings
     {
-        $settings = $this->registeredSettings[$group] ?? null;
+        $resolvedSettings = $this->registeredSettings[$settings] ?? null;
 
-        if (blank($settings)) {
+        if (blank($resolvedSettings)) {
+            if ($group = array_search($settings, $this->registeredSettings)) {
+                return $this->resolveSettings($group);
+            }
+
             return null;
         }
 
