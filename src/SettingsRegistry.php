@@ -153,7 +153,9 @@ class SettingsRegistry
             /** @var array $settings */
             $settings = $this->finder->discover($namespace);
 
-            $this->registerSettings($settings);
+            if (filled($settings)) {
+                $this->registerSettings($settings);
+            }
         }
 
         foreach ($this->settings as $settings) {
