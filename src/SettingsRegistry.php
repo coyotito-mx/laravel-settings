@@ -8,22 +8,21 @@ use Coyotito\LaravelSettings\Exceptions\GroupAlreadyRegisteredException;
 use Coyotito\LaravelSettings\Exceptions\SettingsAlreadyRegisteredException;
 use Coyotito\LaravelSettings\Finders\SettingsFinder;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
-use File;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
-use Throwable;
+
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_normalizer;
 
 class SettingsRegistry
 {
-    protected(set) bool $booted = false;
+    public protected(set) bool $booted = false;
 
     /*** @var array<string, string> */
-    protected(set) array $settings = [];
+    public protected(set) array $settings = [];
 
     /** @var string[] */
-    protected(set) array $namespaces = [];
+    public protected(set) array $namespaces = [];
 
     public function __construct(protected SettingsManifest $manifest, protected SettingsFinder $finder, protected Application $app)
     {
@@ -44,7 +43,6 @@ class SettingsRegistry
     }
 
     /**
-     * @param string|array $settings
      * @return $this
      * @throws GroupAlreadyRegisteredException if the settings group is already registered with other settings class
      * @throws SettingsAlreadyRegisteredException if the same settings class is already registered
@@ -69,7 +67,7 @@ class SettingsRegistry
      *
      * @param class-string<Settings> $settings
      */
-    function bindSettings(string $settings): void
+    public function bindSettings(string $settings): void
     {
         $this->resolveSettingsGroup($settings);
 
@@ -77,7 +75,6 @@ class SettingsRegistry
             /** @var Repository $repository */
             $repository = $app->make('settings.repository');
 
-            /** @var Settings $instance */
             return new $settings($repository);
         });
     }
@@ -128,7 +125,6 @@ class SettingsRegistry
      * Check if the given group/settings is not already registered
      *
      * @param class-string<Settings> $settings
-     * @return void
      * @throws GroupAlreadyRegisteredException if the settings group is already registered with other settings class
      * @throws SettingsAlreadyRegisteredException if the same settings class is already registered
      */
@@ -181,9 +177,9 @@ class SettingsRegistry
         }
 
         // Check if the manifest is present if not, load settings in to the registry
-        ! $this->manifest->present() ?
-            $this->register() :
-            $this->load();
+        $this->manifest->present() ?
+            $this->load() :
+            $this->register();
 
         $this->booted = true;
     }

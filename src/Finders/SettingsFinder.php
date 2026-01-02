@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-
 namespace Coyotito\LaravelSettings\Finders;
 
 use Illuminate\Filesystem\Filesystem;
+
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 
 class SettingsFinder

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 namespace Coyotito\LaravelSettings;
 
 use Coyotito\LaravelSettings\Exceptions\SettingsManifestCannotLoadException;
@@ -30,7 +29,6 @@ class SettingsManifest
     /**
      * Load the settings manifest.
      *
-     * @return array
      * @throws Exception if the manifest file is not found
      */
     public function load(): array
@@ -48,7 +46,6 @@ class SettingsManifest
      * @template Settings of class-string<Settings>
      *
      * @param array<string, Settings> $settings
-     * @return void
      */
     public function generate(array $settings): void
     {
@@ -59,8 +56,6 @@ class SettingsManifest
 
     /**
      * Get the manifest path.
-     *
-     * @return string
      */
     public function getManifestPath(): string
     {

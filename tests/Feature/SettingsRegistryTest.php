@@ -19,7 +19,7 @@ beforeEach(function () {
 });
 
 it('can register settings class', function () {
-    $class = new class (new InMemoryRepository) extends Settings {};
+    $class = new class (new InMemoryRepository()) extends Settings {};
 
     expect(
         $this->registry->registerSettings($fqcn = get_class($class))
@@ -34,8 +34,8 @@ it('can register settings class', function () {
 });
 
 it('cannot register same group settings twice', function () {
-    $class1 = new class (new InMemoryRepository) extends Settings {};
-    $class2 = new class (new InMemoryRepository) extends Settings {};
+    $class1 = new class (new InMemoryRepository()) extends Settings {};
+    $class2 = new class (new InMemoryRepository()) extends Settings {};
 
     $this->registry->registerSettings(get_class($class1));
 
@@ -44,7 +44,7 @@ it('cannot register same group settings twice', function () {
 });
 
 it('cannot register same settings class twice', function () {
-    $class = new class (new InMemoryRepository) extends Settings {};
+    $class = new class (new InMemoryRepository()) extends Settings {};
 
     $this->registry->registerSettings(get_class($class));
 
@@ -63,8 +63,8 @@ it('can register namespace', function () {
     $this->mockFinder
         ->shouldReceive('discover')
         ->andReturn([
-            $fqcn1 = get_class(new class (new InMemoryRepository) extends Settings {}),
-            $fqcn2 = get_class(new class (new InMemoryRepository) extends Settings {
+            $fqcn1 = get_class(new class (new InMemoryRepository()) extends Settings {}),
+            $fqcn2 = get_class(new class (new InMemoryRepository()) extends Settings {
                 public static function getGroup(): string
                 {
                     return 'test';
@@ -88,7 +88,7 @@ it('can register namespace', function () {
 });
 
 it('can resolve settings by class-string', function () {
-    \Coyotito\LaravelSettings\Facades\Settings::swapRepository($repo = new InMemoryRepository);
+    \Coyotito\LaravelSettings\Facades\Settings::swapRepository($repo = new InMemoryRepository());
     $this->mockManifest->shouldReceive('present')->andReturn(false);
     $this->registry->registerSettings($fqcn = get_class(new class ($repo) extends Settings {}));
 
@@ -99,7 +99,7 @@ it('can resolve settings by class-string', function () {
 });
 
 it('can resolve settings by group', function () {
-    \Coyotito\LaravelSettings\Facades\Settings::swapRepository($repo = new InMemoryRepository);
+    \Coyotito\LaravelSettings\Facades\Settings::swapRepository($repo = new InMemoryRepository());
     $this->mockManifest->shouldReceive('present')->andReturn(false);
     $this->registry->registerSettings($fqcn = get_class(new class ($repo) extends Settings {}));
 
@@ -112,7 +112,7 @@ it('can resolve settings by group', function () {
 test('cold boot discovers and registers', function () {
     $this->mockManifest->shouldReceive('present')->andReturnFalse();
     $this->mockFinder->shouldReceive('discover')->andReturn([
-        $fqcn = get_class(new class (new InMemoryRepository) extends Settings {}),
+        $fqcn = get_class(new class (new InMemoryRepository()) extends Settings {}),
     ]);
 
     $this->registry->registerNamespace('App\\DummySettings');
@@ -128,7 +128,7 @@ test('cold boot discovers and registers', function () {
 test('warm boot loads from manifest', function () {
     $this->mockManifest->shouldReceive('present')->andReturnTrue();
     $this->mockManifest->shouldReceive('load')->andReturn([
-        'group' => $fqcn = get_class(new class (new InMemoryRepository) extends Settings {}),
+        'group' => $fqcn = get_class(new class (new InMemoryRepository()) extends Settings {}),
     ]);
 
     $this->registry->boot();
@@ -143,7 +143,7 @@ test('cold vs warm boot produce same registry', function () {
     // Warm boot
     $this->mockManifest->shouldReceive('present')->andReturnTrue();
     $this->mockManifest->shouldReceive('load')->andReturn([
-        'group' => $fqcn = get_class(new class (new InMemoryRepository) extends Settings {}),
+        'group' => $fqcn = get_class(new class (new InMemoryRepository()) extends Settings {}),
     ]);
 
     $this->registry->boot();
@@ -171,7 +171,7 @@ test('cold vs warm boot produce same registry', function () {
 it('should not boot twice', function () {
     $this->mockManifest->shouldReceive('present')->once()->andReturnTrue();
     $this->mockManifest->shouldReceive('load')->once()->andReturn([
-        'group' => $fqcn = get_class(new class (new InMemoryRepository) extends Settings {}),
+        'group' => $fqcn = get_class(new class (new InMemoryRepository()) extends Settings {}),
     ]);
 
     expect($this->registry->booted)
