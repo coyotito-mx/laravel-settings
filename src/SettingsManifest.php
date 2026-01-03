@@ -43,9 +43,7 @@ class SettingsManifest
     /**
      * Generate the settings manifest.
      *
-     * @template Settings of class-string<Settings>
-     *
-     * @param array<string, Settings> $settings
+     * @param array<string, class-string<Settings>> $settings
      */
     public function generate(array $settings): void
     {
