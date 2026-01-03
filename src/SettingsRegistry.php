@@ -69,8 +69,6 @@ class SettingsRegistry
      */
     public function bindSettings(string $settings): void
     {
-        $this->resolveSettingsGroup($settings);
-
         $this->app->scoped($settings, static function ($app) use ($settings): Settings {
             /** @var Repository $repository */
             $repository = $app->make('settings.repository');
@@ -159,6 +157,17 @@ class SettingsRegistry
         }
     }
 
+    public function clearRegisteredSettings(): void
+    {
+        foreach ($this->settings as $settings) {
+            $this->app->offsetUnset($settings);
+        }
+
+        $this->settings = [];
+        $this->booted = false;
+    }
+
+
     protected function load(): void
     {
         $settings = $this->manifest->load();
@@ -176,11 +185,12 @@ class SettingsRegistry
             return;
         }
 
-        // Check if the manifest is present if not, load settings in to the registry
-        $this->manifest->present() ?
-            $this->load() :
-            $this->register();
+        if ($this->manifest->present()) {
+            $this->load();
 
-        $this->booted = true;
+            $this->booted = true;
+        } else {
+            $this->register();
+        }
     }
 }

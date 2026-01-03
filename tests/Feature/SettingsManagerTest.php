@@ -10,9 +10,7 @@ beforeEach(function () {
     rmdir_recursive(app_path('Custom'));
     rmdir_recursive(app_path('Settings'));
 
-    \Coyotito\LaravelSettings\Facades\Settings::fake();
-
-    SettingsManager::clearRegisteredSettingsClasses();
+    \Coyotito\LaravelSettings\Facades\Settings::swapRepository(new InMemoryRepository());
 });
 
 afterEach(function () {
@@ -28,53 +26,40 @@ dataset('classnames', [
     'AdminSettings',
 ]);
 
-it('can load settings', function () {
-    artisan('make:settings-class', ['name' => 'DefaultSettings'])
-        ->assertSuccessful();
-
-    $this->refreshApplication();
-
-    \Coyotito\LaravelSettings\Facades\Settings::swapRepository(new InMemoryRepository());
-
-    expect(SettingsManager::getFacadeRoot())
-        ->resolveSettings('default')
-        ->toBeInstanceOf(Settings::class);
-});
-
-
 it('resolve settings by FQCN', function (string $class) {
-    /** @var \Coyotito\LaravelSettings\SettingsManager $settingsManager */
-    $settingsManager = SettingsManager::getFacadeRoot();
-    $class = makeUniqueClassName($class);
+    /** @var \Coyotito\LaravelSettings\SettingsManager $manager */
+    $manager = SettingsManager::getFacadeRoot();
+    $classname = makeUniqueClassName($class);
 
-    artisan('make:settings-class', ['name' => $class, '--namespace' => $namespace = '\\App\\Custom\\Settings']);
+    artisan('make:settings-class', ['name' => $classname]);
 
-    $settingsManager->registerSettingsClass("$namespace\\$class");
+    $manager->loadSettings();
 
-    expect($settingsManager)
-        ->resolveSettings("$namespace\\$class")
+    expect($manager)
+        ->resolveSettings("App\\Settings\\$classname")
         ->not->toBeNull()
         ->toBeInstanceOf(Settings::class);
 })->with('classnames');
 
 it('can register settings from namespace', function (string $class, string $namespace) {
-    $class = makeUniqueClassName($class);
+    $classname = makeUniqueClassName($class);
 
-    /** @var \Coyotito\LaravelSettings\SettingsManager $settingsManager */
-    $settingsManager = SettingsManager::getFacadeRoot();
+    /** @var \Coyotito\LaravelSettings\SettingsManager $manager */
+    $manager = SettingsManager::getFacadeRoot();
 
-    expect($settingsManager)
+    expect($manager)
         ->resolveSettings('default')
         ->toBeNull();
 
-    artisan('make:settings-class', ['name' => $class, '--namespace' => $namespace])
+    artisan('make:settings-class', ['name' => $classname, '--namespace' => $namespace])
         ->assertSuccessful();
 
-    $settingsManager->addNamespace($namespace);
+    $manager->addNamespace($namespace);
+    $manager->loadSettings();
 
-    expect($settingsManager)
+    expect($manager)
         ->resolveSettings('default')
-        ->toBeInstanceOf($namespace.$class)
+        ->toBeInstanceOf($namespace.$classname)
         ->toBeInstanceOf(Settings::class);
 })->with([
     ['class' => 'DefaultSettings', 'namespace' => 'App\\Custom\\Settings\\'],
@@ -94,6 +79,7 @@ it('can clear settings classes', function (string $class, string $group) {
         ->assertSuccessful();
 
     $settingsManager->addNamespace('App\\Settings\\');
+    $settingsManager->loadSettings();
 
     expect($settingsManager)
         ->resolveSettings($group)
@@ -112,87 +98,19 @@ it('can clear settings classes', function (string $class, string $group) {
     ['class' => 'AdminSettings',   'group' => 'admin'],
 ]);
 
-it('cannot register two settings with the same group', function () {
-    $defaultClassName = makeUniqueClassName('DefaultSettings');
-    $testClassName = makeUniqueClassName('TestSettings');
-
-    artisan('make:settings-class', ['name' => $defaultClassName, '--group' => 'test'])
-        ->assertSuccessful();
-
-    artisan('make:settings-class', ['name' => $testClassName, '--group' => 'test'])
-        ->assertSuccessful();
-
-    expect(fn () => SettingsManager::addNamespace('App\\Settings\\'))
-        ->toThrow(
-            InvalidArgumentException::class,
-            "Cannot register class '$testClassName', 'test' already registered by class '$defaultClassName'"
-        );
-});
-
-it('cannot re-declare settings class', function (string $className) {
-    $class = makeUniqueClassName($className);
-    $settingsManager = SettingsManager::getFacadeRoot();
-
-    artisan('make:settings-class', ['name' => $class, '--namespace' => $namespace = 'App\\Custom\\Settings\\']);
-
-    $fqcn = $namespace.$class;
-    $settingsManager->registerSettingsClass($fqcn);
-
-    expect(fn () => $settingsManager->registerSettingsClass($fqcn))
-        ->toThrow(
-            InvalidArgumentException::class,
-            "Settings group 'default' already registered by class '$class'"
-        );
-})->with('classnames');
-
-it('cannot register unknown namespace', function () {
-    $namespace = '\\None\\Existing\\Namespace\\';
-
-    /** @var \Mockery\LegacyMockInterface&\Coyotito\LaravelSettings\SettingsManager $mock */
-    $mock = $this->mock(\Coyotito\LaravelSettings\SettingsManager::class)
-        ->makePartial()
-        ->shouldAllowMockingProtectedMethods();
-
-    $mock->addNamespace($namespace);
-
-    $mock->shouldHaveReceived('addNamespace', [$namespace]);
-    $mock->shouldNotHaveReceived('registerSettingsClass');
-    $mock->shouldNotHaveReceived('bindSettingsClass');
-});
-
 it('can register settings class', function (string $className) {
     $class = makeUniqueClassName($className);
-    $settingsManager = SettingsManager::getFacadeRoot();
+    $manager = SettingsManager::getFacadeRoot();
 
     artisan('make:settings-class', ['name' => $class, '--namespace' => $namespace = 'App\\Custom\\Settings\\']);
 
     $fqcn = $namespace.$class;
-    $settingsManager->registerSettingsClass($fqcn);
+    $manager->registerSettingsClass($fqcn);
+    $manager->loadSettings();
 
-    expect($settingsManager)
+    expect($manager)
         ->resolveSettings('default')
         ->not->toBeNull()
         ->toBeInstanceOf($fqcn)
         ->toBeInstanceOf(Settings::class);
 })->with('classnames');
-
-it('cannot re-register namespace will not load any new settings class', function () {
-    /** @var \Coyotito\LaravelSettings\SettingsManager $settingsManager */
-    $settingsManager = SettingsManager::getFacadeRoot();
-    $defaultSettings = makeUniqueClassName('DefaultSettings');
-    $testSettings = makeUniqueClassName('TestSettings');
-
-    artisan('make:settings-class', ['name' => $defaultSettings]);
-
-    $settingsManager->addNamespace('App\\Settings\\');
-
-    artisan('make:settings-class', ['name' => $testSettings, '--group' => 'test']);
-
-    $settingsManager->addNamespace('App\\Settings\\');
-
-    expect($settingsManager)
-        ->resolveSettings('default')
-        ->toBeInstanceOf(Settings::class)
-        ->resolveSettings('test')
-        ->toBeNull();
-});

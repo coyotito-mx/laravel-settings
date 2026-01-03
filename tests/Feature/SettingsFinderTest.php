@@ -1,20 +1,24 @@
 <?php
 
 use Coyotito\LaravelSettings\Finders\SettingsFinder;
+use Illuminate\Support\Facades\File;
 use Mockery\LegacyMockInterface;
+use function Pest\Laravel\artisan;
+
+beforeEach(function () {
+   rmdir_recursive(app_path('Settings'));
+});
+
+afterEach(function () {
+    rmdir_recursive(app_path('Settings'));
+});
 
 it('can find settings', function () {
-    $files = \Illuminate\Support\Facades\File::partialMock();
-    $finder = tap(
-        Mockery::mock(new SettingsFinder($files))->makePartial(),
-        fn (LegacyMockInterface $finder) => $finder->shouldAllowMockingProtectedMethods()
-    );
+    $files = File::partialMock();
+    $finder = new SettingsFinder($files);
 
-    $finder->shouldReceive('resolveNamespacePath')->andReturn(trim(app_path('Settings'), DIRECTORY_SEPARATOR));
-    $files->shouldReceive('glob')->andReturn([
-        app_path('Settings/SiteSettings.php'),
-        app_path('Settings/UserSettings.php'),
-    ]);
+    artisan('make:settings-class', ['name' => 'DefaultSettings']);
+    artisan('make:settings-class', ['name' => 'TestSettings', '--group' => 'test']);
 
     expect($finder)
         ->discover('App\\Settings')
@@ -24,7 +28,7 @@ it('can find settings', function () {
 });
 
 it('cannot find settings', function () {
-    $files = \Illuminate\Support\Facades\File::partialMock();
+    $files = File::partialMock();
     $finder = tap(
         Mockery::mock(new SettingsFinder($files))->makePartial(),
         fn (LegacyMockInterface $finder) => $finder->shouldAllowMockingProtectedMethods()
