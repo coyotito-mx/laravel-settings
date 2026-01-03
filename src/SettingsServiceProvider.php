@@ -42,7 +42,7 @@ class SettingsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->optimizes('settings:cache');
+        $this->optimizes(CacheSettingsCommand::class, 'settings');
 
         $this->publishMigrations();
 
