@@ -14,7 +14,7 @@ class CacheSettingsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'cache:settings';
+    protected $signature = 'cache:settings { --force : Overwrite any existing cached settings file }';
 
     /**
      * The console command description.
@@ -36,10 +36,10 @@ class CacheSettingsCommand extends Command
         $manifest = $this->makeManifest();
 
         if ($manifest->present()) {
-            if (! $this->confirm('Settings are already cached. Do you want to overwrite the existing cache?')) {
-                $this->components->warn('Operation cancelled.');
+            if ($this->option('force') !== true) {
+                $this->components->error('Settings cache already exists! Use the --force option to overwrite it.');
 
-                return self::FAILURE;
+                return self::SUCCESS;
             }
 
             $this->files->delete($this->getCachePath());
