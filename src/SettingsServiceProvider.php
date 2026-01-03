@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings;
 
 use Composer\Autoload\ClassLoader;
+use Coyotito\LaravelSettings\Console\Commands\CacheSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
@@ -41,12 +42,15 @@ class SettingsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->optimizes('settings:cache');
+
         $this->publishMigrations();
 
         $this->addCommands([
             MakeSettingsCommand::class,
             MakeSettingsClassCommand::class,
             MakeSettingsMigrationCommand::class,
+            CacheSettingsCommand::class,
         ]);
 
         Facades\SettingsManager::addNamespace($this->getSettingsRootNamespace());
@@ -91,7 +95,7 @@ class SettingsServiceProvider extends ServiceProvider
 
         $this->app->alias(Repository::class, 'settings.repository');
 
-        $this->app->scoped('settings.manager', function (Application $app): SettingsManager {
+        $this->app->scoped(SettingsManager::class, function (Application $app): SettingsManager {
             $filesystem = $app->make('files');
 
             $finder = new SettingsFinder($filesystem);
@@ -100,6 +104,8 @@ class SettingsServiceProvider extends ServiceProvider
 
             return new SettingsManager($registry);
         });
+
+        $this->app->alias(SettingsManager::class, 'settings.manager');
 
         $this->app->scoped(SettingsService::class, function (Application $app): SettingsService {
             $manager = $app->make('settings.manager');

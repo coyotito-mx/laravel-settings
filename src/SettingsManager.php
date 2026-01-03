@@ -17,7 +17,7 @@ use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
  */
 class SettingsManager
 {
-    public function __construct(protected SettingsRegistry $registry)
+    public function __construct(public SettingsRegistry $registry)
     {
         //
     }

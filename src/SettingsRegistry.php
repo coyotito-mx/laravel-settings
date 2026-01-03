@@ -167,6 +167,10 @@ class SettingsRegistry
         $this->booted = false;
     }
 
+    public function generateManifest(): void
+    {
+        $this->manifest->generate($this->settings);
+    }
 
     protected function load(): void
     {
@@ -179,7 +183,7 @@ class SettingsRegistry
         }
     }
 
-    public function boot(): void
+    public function boot(bool $shouldGenerateManifest = false): void
     {
         if ($this->booted) {
             return;
@@ -191,6 +195,10 @@ class SettingsRegistry
             $this->booted = true;
         } else {
             $this->register();
+
+            if ($shouldGenerateManifest) {
+                $this->generateManifest();
+            }
         }
     }
 }
