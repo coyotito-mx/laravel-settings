@@ -6,6 +6,7 @@ namespace Coyotito\LaravelSettings;
 
 use Coyotito\LaravelSettings\Exceptions\GroupAlreadyRegisteredException;
 use Coyotito\LaravelSettings\Exceptions\SettingsAlreadyRegisteredException;
+
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_normalizer;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 
@@ -32,11 +33,10 @@ class SettingsManager
     /**
      * Register a Setting class in the container.
      *
-     * @param string|array $settings
      * @throws GroupAlreadyRegisteredException
      * @throws SettingsAlreadyRegisteredException
      */
-    public function registerSettingsClass(string|array $settings,): void
+    public function registerSettingsClass(string|array $settings): void
     {
         $this->registry->registerSettings($settings);
     }

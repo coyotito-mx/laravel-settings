@@ -3,10 +3,11 @@
 use Coyotito\LaravelSettings\Finders\SettingsFinder;
 use Illuminate\Support\Facades\File;
 use Mockery\LegacyMockInterface;
+
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {
-   rmdir_recursive(app_path('Settings'));
+    rmdir_recursive(app_path('Settings'));
 });
 
 afterEach(function () {

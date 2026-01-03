@@ -7,7 +7,6 @@ namespace Coyotito\LaravelSettings\Finders;
 use Coyotito\LaravelSettings\Settings;
 use Illuminate\Filesystem\Filesystem;
 
-use Illuminate\Support\Str;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_normalizer;
 use function Coyotito\LaravelSettings\Helpers\psr4_namespace_to_path;
 

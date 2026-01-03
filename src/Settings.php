@@ -40,8 +40,6 @@ abstract class Settings
 
     /**
      * The group name for the settings
-     *
-     * @var string|null
      */
     protected static ?string $group = null;
 
