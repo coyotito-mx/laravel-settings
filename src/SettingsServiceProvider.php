@@ -6,6 +6,7 @@ namespace Coyotito\LaravelSettings;
 
 use Composer\Autoload\ClassLoader;
 use Coyotito\LaravelSettings\Console\Commands\CacheSettingsCommand;
+use Coyotito\LaravelSettings\Console\Commands\ClearCacheSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
@@ -51,6 +52,7 @@ class SettingsServiceProvider extends ServiceProvider
             MakeSettingsClassCommand::class,
             MakeSettingsMigrationCommand::class,
             CacheSettingsCommand::class,
+            ClearCacheSettingsCommand::class,
         ]);
 
         Facades\SettingsManager::addNamespace($this->getSettingsRootNamespace());
