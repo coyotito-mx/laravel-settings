@@ -1,5 +1,13 @@
 # Release Notes
 
+## v0.2.0 - 2026-01-04
+
+### What's Changed
+
+* [FEAT]: Add cache for settings by [@asciito](https://github.com/asciito) in https://github.com/coyotito-mx/laravel-settings/pull/37
+
+**Full Changelog**: https://github.com/coyotito-mx/laravel-settings/compare/v0.1.2...v0.2.0
+
 ## v0.1.2 - 2025-12-21
 
 ### What's changed
