@@ -38,9 +38,16 @@ abstract class Settings
      */
     public const string DEFAULT_GROUP = 'default';
 
-    public function __construct(protected Repository $repository, public string $group = self::DEFAULT_GROUP)
+    /**
+     * The group name for the settings
+     */
+    protected static ?string $group = null;
+
+    public function __construct(protected Repository $repository, string $group = self::DEFAULT_GROUP)
     {
-        $this->repository->group = $this->group;
+        $this->repository->group = $group;
+
+        static::setGroup($group);
 
         $properties = $this->getCachedPropertyNames();
 
@@ -192,11 +199,16 @@ abstract class Settings
             ->all();
     }
 
+    public static function setGroup(string $group): void
+    {
+        static::$group = $group;
+    }
+
     /**
      * Get the group name
      */
     public static function getGroup(): string
     {
-        return Settings::DEFAULT_GROUP;
+        return self::$group ?? self::DEFAULT_GROUP;
     }
 }

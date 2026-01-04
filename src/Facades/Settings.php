@@ -40,10 +40,13 @@ class Settings extends Facade
             )
         );
 
-        $manager->registerSettingsClass(DynamicSettings::class, $group);
+        DynamicSettings::setGroup($group);
+
+        $manager->registerSettingsClass(DynamicSettings::class);
+        $manager->loadSettings();
 
         /** @var DynamicSettings $settings */
-        $settings = $manager->resolveSettings($group);
+        $settings = $manager->resolveSettings(DynamicSettings::getGroup());
 
         return $settings;
     }

@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Coyotito\LaravelSettings;
 
 use Composer\Autoload\ClassLoader;
+use Coyotito\LaravelSettings\Console\Commands\CacheSettingsCommand;
+use Coyotito\LaravelSettings\Console\Commands\ClearCacheSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsClassCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsCommand;
 use Coyotito\LaravelSettings\Console\Commands\MakeSettingsMigrationCommand;
 use Coyotito\LaravelSettings\Database\Schema\Builder;
+use Coyotito\LaravelSettings\Finders\SettingsFinder;
 use Coyotito\LaravelSettings\Repositories\Contracts\Repository;
 use Coyotito\LaravelSettings\Repositories\EloquentRepository;
 use Coyotito\LaravelSettings\Repositories\InMemoryRepository;
@@ -40,12 +43,16 @@ class SettingsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->optimizes(CacheSettingsCommand::class, 'settings');
+
         $this->publishMigrations();
 
         $this->addCommands([
             MakeSettingsCommand::class,
             MakeSettingsClassCommand::class,
             MakeSettingsMigrationCommand::class,
+            CacheSettingsCommand::class,
+            ClearCacheSettingsCommand::class,
         ]);
 
         Facades\SettingsManager::addNamespace($this->getSettingsRootNamespace());
@@ -90,9 +97,17 @@ class SettingsServiceProvider extends ServiceProvider
 
         $this->app->alias(Repository::class, 'settings.repository');
 
-        $this->app->scoped('settings.manager', function (Application $app): SettingsManager {
-            return new SettingsManager($app);
+        $this->app->scoped(SettingsManager::class, function (Application $app): SettingsManager {
+            $filesystem = $app->make('files');
+
+            $finder = new SettingsFinder($filesystem);
+            $manifest = new SettingsManifest($filesystem, base_path('bootstrap/cache/settings.php'));
+            $registry = new SettingsRegistry($manifest, $finder, $app);
+
+            return new SettingsManager($registry);
         });
+
+        $this->app->alias(SettingsManager::class, 'settings.manager');
 
         $this->app->scoped(SettingsService::class, function (Application $app): SettingsService {
             $manager = $app->make('settings.manager');
@@ -101,6 +116,10 @@ class SettingsServiceProvider extends ServiceProvider
         });
 
         $this->app->alias(SettingsService::class, 'settings.service');
+
+        $this->booted(function (): void {
+            Facades\SettingsManager::loadSettings();
+        });
     }
 
     /**
